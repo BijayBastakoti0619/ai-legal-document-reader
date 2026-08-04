@@ -30,3 +30,5 @@ documents and receive structured AI-assisted summaries.
 backend/      Spring Boot REST API
 frontend/     Angular web application
 mcp-server/   Future AI tool server
+
+Need to add

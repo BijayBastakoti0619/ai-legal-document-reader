@@ -1,0 +1,45 @@
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# Java and Maven
+backend/target/
+*.class
+*.jar
+*.war
+.mvn/timing.properties
+
+# Angular and Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local uploads
+uploads/
+backend/uploads/
+
+# Logs
+*.log
+logs/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+
+# Secrets
+application-local.yml
+application-secrets.yml
+service-account*.json

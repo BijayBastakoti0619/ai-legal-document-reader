@@ -3,10 +3,10 @@ spring:
     name: ai-document-reader-backend
 
   datasource:
-    url: jdbc:h2:mem:aidocdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/ai_document_reader
+    username: postgres
+    password: springboot
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:

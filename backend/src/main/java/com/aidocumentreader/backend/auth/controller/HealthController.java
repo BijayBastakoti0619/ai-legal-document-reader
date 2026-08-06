@@ -1,4 +1,4 @@
-package com.aidocumentreader.backend.common.controller;
+package com.aidocumentreader.backend.auth.controller;
 
 import java.util.Map;
 

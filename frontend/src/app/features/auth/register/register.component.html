@@ -1,0 +1,148 @@
+<section class="registration-container">
+  <h1>Create an account</h1>
+
+  <form
+    [formGroup]="registrationForm"
+    (ngSubmit)="onSubmit()"
+    novalidate
+  >
+    <div>
+      <label for="displayName">Display name</label>
+
+      <input
+        id="displayName"
+        type="text"
+        formControlName="displayName"
+        autocomplete="name"
+      />
+
+      @if (fieldHasError('displayName', 'required')) {
+      <p class="field-error">Display name is required.</p>
+      }
+
+      @if (fieldHasError('displayName', 'minlength')) {
+      <p class="field-error">
+        Display name must contain at least 2 characters.
+      </p>
+      }
+
+      @if (fieldHasError('displayName', 'maxlength')) {
+      <p class="field-error">
+        Display name must not exceed 100 characters.
+      </p>
+      }
+
+      @if (fieldHasError('displayName', 'backend')) {
+      <p class="field-error">
+        {{ registrationForm.get('displayName')?.getError('backend') }}
+      </p>
+      }
+    </div>
+
+    <div>
+      <label for="email">Email</label>
+
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+      />
+
+      @if (fieldHasError('email', 'required')) {
+      <p class="field-error">Email is required.</p>
+      }
+
+      @if (fieldHasError('email', 'email')) {
+      <p class="field-error">Enter a valid email address.</p>
+      }
+
+      @if (fieldHasError('email', 'backend')) {
+      <p class="field-error">
+        {{ registrationForm.get('email')?.getError('backend') }}
+      </p>
+      }
+    </div>
+
+    <div>
+      <label for="password">Password</label>
+
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+      />
+
+      @if (fieldHasError('password', 'required')) {
+      <p class="field-error">Password is required.</p>
+      }
+
+      @if (fieldHasError('password', 'minlength')) {
+      <p class="field-error">
+        Password must contain at least 8 characters.
+      </p>
+      }
+
+      @if (fieldHasError('password', 'pattern')) {
+      <p class="field-error">
+        Use uppercase, lowercase, number, and special character.
+      </p>
+      }
+
+      @if (fieldHasError('password', 'backend')) {
+      <p class="field-error">
+        {{ registrationForm.get('password')?.getError('backend') }}
+      </p>
+      }
+    </div>
+
+    <div>
+      <label for="confirmPassword">Confirm password</label>
+
+      <input
+        id="confirmPassword"
+        type="password"
+        formControlName="confirmPassword"
+        autocomplete="new-password"
+      />
+
+      @if (fieldHasError('confirmPassword', 'required')) {
+      <p class="field-error">
+        Please confirm your password.
+      </p>
+      }
+
+      @if (
+      registrationForm.touched &&
+      registrationForm.hasError('passwordMismatch')
+      ) {
+      <p class="field-error">Passwords do not match.</p>
+      }
+    </div>
+
+    @if (backendError) {
+    <div class="form-error" role="alert">
+      {{ backendError }}
+    </div>
+    }
+
+    @if (successMessage) {
+    <div class="success-message" role="status">
+      {{ successMessage }}
+    </div>
+    }
+
+    <button
+      type="submit"
+      [disabled]="registrationForm.invalid || isSubmitting"
+    >
+      {{ isSubmitting ? 'Creating account...' : 'Create account' }}
+    </button>
+  </form>
+
+  <p>
+    Already have an account?
+    <a routerLink="/login">Log in</a>
+  </p>
+</section>

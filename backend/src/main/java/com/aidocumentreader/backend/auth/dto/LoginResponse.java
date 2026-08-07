@@ -11,6 +11,6 @@ public record LoginResponse(
             Long id,
             String email,
             String displayName,
-            String Role
+            String role
     ){}
 }

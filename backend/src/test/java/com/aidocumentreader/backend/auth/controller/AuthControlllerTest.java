@@ -1,5 +1,6 @@
 package com.aidocumentreader.backend.auth.controller;
 
+import com.aidocumentreader.backend.auth.jwttoken.JwtAuthenticationFilter;
 import com.aidocumentreader.backend.auth.service.LoginService;
 import com.aidocumentreader.backend.auth.service.RegistrationService;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // Bypasses the security filters for the web test
 class AuthControllerTest {
 
     @Autowired
@@ -27,9 +28,12 @@ class AuthControllerTest {
     @MockitoBean
     private LoginService loginService;
 
+    // --- ADDED THIS TO SATISFY SECURITY CONFIGURATIONS ---
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Test
     void shouldReturn400WhenLoginRequestIsInvalid() throws Exception {
-        // Arrange: A JSON payload with a blank password and invalid email
         String invalidJsonPayload = """
                 {
                   "email": "not-an-email",
@@ -37,7 +41,6 @@ class AuthControllerTest {
                 }
                 """;
 
-        // Act & Assert: Send POST request and expect 400 Bad Request due to validation
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJsonPayload))
@@ -46,7 +49,6 @@ class AuthControllerTest {
 
     @Test
     void shouldReturn200WhenLoginRequestIsValid() throws Exception {
-        // Arrange: A valid JSON payload
         String validJsonPayload = """
                 {
                   "email": "user@example.com",
@@ -54,8 +56,35 @@ class AuthControllerTest {
                 }
                 """;
 
-        // Act & Assert: Send POST request and expect 200 OK
         mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validJsonPayload))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturn200WhenRefreshRequestIsValid() throws Exception {
+        String validJsonPayload = """
+                {
+                  "refreshToken": "some-valid-refresh-token-hash"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validJsonPayload))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturn200WhenLogoutRequestIsValid() throws Exception {
+        String validJsonPayload = """
+                {
+                  "refreshToken": "some-valid-refresh-token-hash"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJsonPayload))
                 .andExpect(status().isOk());

@@ -2,6 +2,12 @@ spring:
   application:
     name: ai-document-reader-backend
 
+  #--- Security ---
+  security:
+    jwt:
+      secret-key: "IlVaKY30Uqx7gEihF6i0BpBxeDM8c4Oe5wjm8C+KGzo="
+      expiration-ms: 900000 #15 minutes in millisecond
+  #----------------
   datasource:
     url: jdbc:postgresql://localhost:5432/ai_document_reader
     username: postgres

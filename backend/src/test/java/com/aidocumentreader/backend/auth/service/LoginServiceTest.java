@@ -2,6 +2,10 @@ package com.aidocumentreader.backend.auth.service;
 
 import com.aidocumentreader.backend.auth.dto.LoginRequest;
 import com.aidocumentreader.backend.auth.dto.LoginResponse;
+import com.aidocumentreader.backend.auth.dto.RefreshRequest;
+import com.aidocumentreader.backend.auth.dto.RefreshResponse;
+import com.aidocumentreader.backend.auth.jwttoken.JwtService;
+import com.aidocumentreader.backend.refreshtoken.service.RefreshTokenService;
 import com.aidocumentreader.backend.user.entity.Role;
 import com.aidocumentreader.backend.user.entity.User;
 import com.aidocumentreader.backend.user.repository.UserRepository;
@@ -17,7 +21,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,18 +33,20 @@ class LoginServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private LoginService loginService;
 
     @Test
     void shouldThrowExceptionWhenEmailDoesNotExist() {
-        // Arrange
-        LoginRequest request = new LoginRequest("unknown@example.com", "StrongPassword123!");
+        LoginRequest request = new LoginRequest("wrong@example.com", "password");
+        when(userRepository.findByEmailIgnoreCase(request.email())).thenReturn(Optional.empty());
 
-        // Tell Mockito to return an empty Optional when the repository is called
-        when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
-
-        // Act & Assert
         assertThatThrownBy(() -> loginService.login(request))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid email or password");
@@ -48,45 +54,74 @@ class LoginServiceTest {
 
     @Test
     void shouldThrowExceptionWhenPasswordIsIncorrect() {
-        // Arrange
-        LoginRequest request = new LoginRequest("user@example.com", "WrongPassword!");
+        LoginRequest request = new LoginRequest("user@example.com", "wrong-password");
+        User user = new User();
+        user.setPasswordHash("hashed-password");
 
-        User mockUser = new User();
-        mockUser.setPasswordHash("database-hashed-password");
+        when(userRepository.findByEmailIgnoreCase(request.email())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(request.password(), user.getPasswordHash())).thenReturn(false);
 
-        // Mock the repository to return our fake user, but mock the encoder to return FALSE
-        when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.of(mockUser));
-        when(passwordEncoder.matches(request.password(), mockUser.getPasswordHash())).thenReturn(false);
-
-        // Act & Assert
         assertThatThrownBy(() -> loginService.login(request))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid email or password");
     }
 
     @Test
-    void shouldReturnLoginResponseWhenCredentialsAreValid() {
-        // Arrange
-        LoginRequest request = new LoginRequest("user@example.com", "StrongPassword123!");
+    void shouldReturnLoginResponseWithRealTokensWhenCredentialsAreValid() {
+        LoginRequest request = new LoginRequest("user@example.com", "CorrectPassword123!");
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("user@example.com");
+        user.setPasswordHash("hashed-password");
+        user.setDisplayName("Test User");
+        user.setRole(Role.USER);
 
+        when(userRepository.findByEmailIgnoreCase(request.email())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(request.password(), user.getPasswordHash())).thenReturn(true);
+
+        when(jwtService.generateAccessToken(user.getEmail())).thenReturn("real-jwt-token");
+        when(refreshTokenService.createRefreshToken(user.getId())).thenReturn("real-refresh-token");
+
+        LoginResponse response = loginService.login(request);
+
+        assertThat(response.accessToken()).isEqualTo("real-jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("real-refresh-token");
+        assertThat(response.user().email()).isEqualTo("user@example.com");
+    }
+
+    // --- NEW TESTS FOR REFRESH AND LOGOUT ---
+
+    @Test
+    void shouldRotateTokensSuccessfully() {
+        // Arrange
+        RefreshRequest request = new RefreshRequest("old-refresh-token");
         User mockUser = new User();
         mockUser.setId(1L);
         mockUser.setEmail("user@example.com");
-        mockUser.setDisplayName("Test User");
-        mockUser.setRole(Role.USER);
-        mockUser.setPasswordHash("database-hashed-password");
 
-        // Mock the repository to return the user, and the encoder to return TRUE
-        when(userRepository.findByEmailIgnoreCase(request.email())).thenReturn(Optional.of(mockUser));
-        when(passwordEncoder.matches(request.password(), mockUser.getPasswordHash())).thenReturn(true);
+        // Mock the expected behavior of the RefreshTokenService (which we will build next)
+        when(refreshTokenService.verifyAndRevokeToken(request.refreshToken())).thenReturn(mockUser);
+        when(refreshTokenService.createRefreshToken(mockUser.getId())).thenReturn("new-refresh-token");
+        when(jwtService.generateAccessToken(mockUser.getEmail())).thenReturn("new-jwt-token");
 
         // Act
-        LoginResponse response = loginService.login(request);
+        RefreshResponse response = loginService.refreshToken(request);
 
         // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.accessToken()).isEqualTo("temp-jwt-access-token");
-        assertThat(response.user().email()).isEqualTo("user@example.com");
-        assertThat(response.user().role()).isEqualTo("USER");
+        assertThat(response.accessToken()).isEqualTo("new-jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
+    }
+
+    @Test
+    void shouldRevokeTokenOnLogout() {
+        // Arrange
+        RefreshRequest request = new RefreshRequest("token-to-revoke");
+
+        // Act
+        loginService.logout(request);
+
+        // Assert
+        // Verify that the LoginService successfully tells the RefreshTokenService to kill the token
+        verify(refreshTokenService).verifyAndRevokeToken(request.refreshToken());
     }
 }

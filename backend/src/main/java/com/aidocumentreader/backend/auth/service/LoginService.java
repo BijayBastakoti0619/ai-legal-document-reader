@@ -2,6 +2,10 @@ package com.aidocumentreader.backend.auth.service;
 
 import com.aidocumentreader.backend.auth.dto.LoginRequest;
 import com.aidocumentreader.backend.auth.dto.LoginResponse;
+import com.aidocumentreader.backend.auth.dto.RefreshRequest;
+import com.aidocumentreader.backend.auth.dto.RefreshResponse;
+import com.aidocumentreader.backend.auth.jwttoken.JwtService;
+import com.aidocumentreader.backend.refreshtoken.service.RefreshTokenService;
 import com.aidocumentreader.backend.user.entity.User;
 import com.aidocumentreader.backend.user.repository.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,29 +17,35 @@ public class LoginService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    // Injecting the repository and the security encoder via the constructor
-    public LoginService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public LoginService(UserRepository userRepository,
+                        PasswordEncoder passwordEncoder,
+                        JwtService jwtService,
+                        RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public LoginResponse login(LoginRequest request) {
-        // 1. Fetch the user by email from the database
         User user = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        // 2. Verify the raw password against the hashed password
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        // 3. Return the success response with dummy tokens for now
+        String accessToken = jwtService.generateAccessToken(user.getEmail());
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
         return new LoginResponse(
-                "temp-jwt-access-token",
-                "temp-refresh-token",
+                accessToken,
+                refreshToken,
                 "Bearer",
-                900, // 15 minutes in seconds
+                900,
                 new LoginResponse.UserInfo(
                         user.getId(),
                         user.getEmail(),
@@ -43,5 +53,22 @@ public class LoginService {
                         user.getRole().name()
                 )
         );
+    }
+
+    public RefreshResponse refreshToken(RefreshRequest request) {
+        // 1. Verify and kill the old token
+        User user = refreshTokenService.verifyAndRevokeToken(request.refreshToken());
+
+        // 2. Generate a fresh pair of tokens (Rotation)
+        String newAccessToken = jwtService.generateAccessToken(user.getEmail());
+        String newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+        // 3. Return the new secure session to the user
+        return new RefreshResponse(newAccessToken, newRefreshToken, "Bearer", 900);
+    }
+
+    public void logout(RefreshRequest request) {
+        // Safely revoke the token in the database so it can never be used again
+        refreshTokenService.verifyAndRevokeToken(request.refreshToken());
     }
 }

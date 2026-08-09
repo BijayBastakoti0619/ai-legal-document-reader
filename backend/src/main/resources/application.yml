@@ -10,8 +10,8 @@ spring:
   #----------------
   datasource:
     url: jdbc:postgresql://localhost:5432/ai_document_reader
-    username: postgres
-    password: springboot
+    username: ai_user
+    password: local_password
     driver-class-name: org.postgresql.Driver
 
   jpa:

@@ -11,6 +11,7 @@ import com.aidocumentreader.backend.user.repository.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LoginService {
@@ -55,6 +56,7 @@ public class LoginService {
         );
     }
 
+    @Transactional
     public RefreshResponse refreshToken(RefreshRequest request) {
         // 1. Verify and kill the old token
         User user = refreshTokenService.verifyAndRevokeToken(request.refreshToken());

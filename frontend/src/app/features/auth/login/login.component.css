@@ -1,0 +1,17 @@
+.login-container {
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 24px;
+}
+
+.success-message {
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+}
+
+h1 {
+  margin-bottom: 20px;
+}

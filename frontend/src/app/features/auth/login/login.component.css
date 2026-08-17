@@ -18,6 +18,18 @@
   max-width: 400px;
 }
 
+/* --- FROM MAIN: Success banner styling for registration redirect --- */
+.success-message {
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #e8f5e9;
+  color: #2e7d32; /* Added dark green text for readability */
+  border: 1px solid #4caf50;
+  border-radius: 6px; /* Matched to your 6px input border radius */
+  text-align: center;
+  font-size: 0.875rem;
+}
+
 .login-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -92,4 +104,15 @@ input.is-invalid {
 .submit-btn:disabled {
   background-color: #cbd5e1;
   cursor: not-allowed;
+}
+
+/* Added a small touch to make your friend's register link match your theme */
+.register-prompt a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-prompt a:hover {
+  text-decoration: underline;
 }

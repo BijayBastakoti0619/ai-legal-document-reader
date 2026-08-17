@@ -2,18 +2,21 @@
 
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
-  templateUrl: './login.component.html', // Pointing to the new HTML file
-  styleUrl: './login.component.css'      // Pointing to the new CSS file
+  imports: [ReactiveFormsModule, RouterLink], // Combined your forms with your friend's RouterLink
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  // Inject our dependencies
+  // --- FROM MAIN: Checks if the user just registered successfully so UI can show a banner ---
+  registrationSuccess = history.state?.registrationSuccess === true;
+
+  // --- FROM YOUR BRANCH: Inject our dependencies ---
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);

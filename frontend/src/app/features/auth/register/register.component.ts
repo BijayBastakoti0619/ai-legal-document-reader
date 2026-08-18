@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef,Component, inject } from '@angular/core';
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -9,9 +9,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { RegisterRequest } from '../../../shared/models/register-request';
+import { RegisterRequest } from '../../../shared/models/auth.models';
 import { ApiErrorResponse } from '../../../shared/models/api-error-response';
 import { passwordMatchValidator } from '../../../shared/validator/passwordMatchValidator';
+
 
 @Component({
   selector: 'app-register',
@@ -24,6 +25,7 @@ export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private  readonly changeDetectorRef= inject(ChangeDetectorRef);
 
   isSubmitting = false;
   backendError = '';
@@ -89,6 +91,8 @@ export class RegisterComponent {
       .pipe(
         finalize(() => {
           this.isSubmitting = false;
+
+          this.changeDetectorRef.markForCheck();
         })
       )
       .subscribe({
@@ -104,6 +108,7 @@ export class RegisterComponent {
         },
         error: (error: HttpErrorResponse) => {
           this.handleBackendError(error);
+          this.changeDetectorRef.markForCheck();
         }
       });
   }

@@ -9,7 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { RegisterRequest } from '../../../shared/models/register-request';
+import { RegisterRequest } from '../../../shared/models/auth.models';
 import { ApiErrorResponse } from '../../../shared/models/api-error-response';
 import { passwordMatchValidator } from '../../../shared/validator/passwordMatchValidator';
 

@@ -1,6 +1,7 @@
 // src/app/app.routes.ts
 
 import { Routes } from '@angular/router';
+import { RegisterComponent } from './features/auth/register/register.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { authGuard } from './core/guards/auth.guard';

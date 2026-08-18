@@ -72,8 +72,6 @@ public class RefreshTokenService {
         }
     }
 
-    // --- NEW SKELETON METHOD ---
-
     @Transactional
     public User verifyAndRevokeToken(String rawToken) {
         // 1. Hash the raw token provided by the user

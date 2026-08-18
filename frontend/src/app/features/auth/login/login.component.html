@@ -1,18 +1,57 @@
-<div class="login-container">
+<div class="login-wrapper">
+  <div class="login-card">
 
-  @if (registrationSuccess) {
-  <div class="success-message">
-    Account created successfully. Please log in.
+    @if (registrationSuccess) {
+    <div class="success-message">
+      Account created successfully. Please log in.
+    </div>
+    }
+
+    <div class="login-header">
+      <h2>Welcome Back</h2>
+      <p>Sign in to your AI Legal Document Reader</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="name@example.com"
+          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        >
+
+        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+        <span class="error-text">Please enter a valid email address.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        >
+
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+        <span class="error-text">Password is required.</span>
+        }
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid">
+        Sign In
+      </button>
+
+      <p class="register-prompt" style="text-align: center; margin-top: 15px;">
+        Don't have an account? <a routerLink="/register">Register</a>
+      </p>
+
+    </form>
   </div>
-  }
-
-  <h1>Login</h1>
-
-  <p>Login functionality will be implemented here.</p>
-
-  <p>
-    Don't have an account?
-    <a routerLink="/register">Register</a>
-  </p>
-
 </div>

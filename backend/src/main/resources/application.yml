@@ -30,6 +30,13 @@ app:
   cors:
     # Uses the ENV variable in production, falls back to localhost for local dev
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  storage:
+      b2:
+        bucket: ${B2_BUCKET_NAME}
+        region: ${B2_REGION}
+        endpoint: ${B2_ENDPOINT}
+        key-id: ${B2_KEY_ID}
+        application-key: ${B2_APPLICATION_KEY}
 
 server:
   port: 8080

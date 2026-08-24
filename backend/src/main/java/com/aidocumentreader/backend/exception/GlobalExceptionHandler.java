@@ -142,6 +142,26 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(DocumentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentNotFound(
+            DocumentNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "DOCUMENT_NOT_FOUND",
+                exception.getMessage(),
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
     private String correlationId() {
         String existingId = MDC.get("correlationId");
 

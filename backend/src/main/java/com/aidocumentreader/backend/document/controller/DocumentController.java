@@ -1,8 +1,13 @@
 package com.aidocumentreader.backend.document.controller;
 
+import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
+import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.dto.DocumentUploadResponse;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.service.DocumentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,5 +46,26 @@ public class DocumentController {
                 document.getStatus(),
                 document.getCreatedAt()
         );
+    }
+
+    @GetMapping
+    public Page<DocumentSummaryResponse> getDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal principal
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Pass the pagination request and the secure email from the JWT
+        return documentService.getDocuments(pageable, principal.getName());
+    }
+
+    @GetMapping("/{id}")
+    public DocumentDetailResponse getDocument(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        // Pass the requested ID and the secure email from the JWT
+        return documentService.getDocument(id, principal.getName());
     }
 }

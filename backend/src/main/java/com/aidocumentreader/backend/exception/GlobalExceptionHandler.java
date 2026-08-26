@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.List;
@@ -71,6 +72,66 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "INTERNAL_SERVER_ERROR",
                 "An unexpected error occurred.",
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
+    @ExceptionHandler(DocumentValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentValidation(
+            DocumentValidationException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                exception.getStatus().value(),
+                exception.getCode(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(exception.getStatus())
+                .body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                "FILE_TOO_LARGE",
+                "The uploaded PDF exceeds the maximum allowed file size.",
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(response);
+    }
+
+    @ExceptionHandler(DocumentUploadException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentUpload(
+            DocumentUploadException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "UPLOAD_FAILED",
+                exception.getMessage(),
                 request.getRequestURI(),
                 correlationId(),
                 List.of()

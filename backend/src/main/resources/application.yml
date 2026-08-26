@@ -2,6 +2,11 @@ spring:
   application:
     name: ai-document-reader-backend
 
+  servlet:
+    multipart:
+      max-file-size: ${app.document-upload.max-file-size}
+      max-request-size: 12MB
+
   #--- Security ---
   security:
     jwt:
@@ -27,6 +32,8 @@ spring:
 # CUSTOM APP CONFIGURATION (Root level, no indentation)
 # ----------------------------------------------------
 app:
+  document-upload:
+    max-file-size: 10MB
   cors:
     # Uses the ENV variable in production, falls back to localhost for local dev
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200}

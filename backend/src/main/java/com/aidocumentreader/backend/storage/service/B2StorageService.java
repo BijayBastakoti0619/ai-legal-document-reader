@@ -3,9 +3,12 @@ package com.aidocumentreader.backend.storage.service;
 import com.aidocumentreader.backend.config.B2StorageProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
@@ -39,5 +42,19 @@ public class B2StorageService {
                 .build();
 
         s3Client.deleteObject(request);
+    }
+
+    public byte[] download(String objectKey) {
+
+        GetObjectRequest request =
+                GetObjectRequest.builder()
+                        .bucket(properties.bucket())
+                        .key(objectKey)
+                        .build();
+
+        ResponseBytes<GetObjectResponse> response =
+                s3Client.getObjectAsBytes(request);
+
+        return response.asByteArray();
     }
 }

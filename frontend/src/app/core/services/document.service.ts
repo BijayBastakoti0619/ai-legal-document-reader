@@ -8,6 +8,7 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  DocumentType,
   DocumentUploadResponse
 } from '../../shared/models/document.models';
 
@@ -28,7 +29,8 @@ export class DocumentService {
 
 
   uploadDocument(
-    file: File
+    file: File,
+     documentType: DocumentType
   ): Observable<HttpEvent<DocumentUploadResponse>> {
 
     const formData = new FormData();
@@ -37,6 +39,11 @@ export class DocumentService {
       'file',
       file,
       file.name
+    );
+
+    formData.append(
+      'documentType',
+      documentType
     );
 
     return this.http.post<DocumentUploadResponse>(
@@ -96,8 +103,18 @@ export class DocumentService {
     }
 
     try {
-      return JSON.parse(stored) as DocumentUploadResponse[];
+
+      const documents =
+        JSON.parse(stored) as DocumentUploadResponse[];
+
+      return documents.map(document => ({
+        ...document,
+        documentType:
+          document.documentType ?? 'OTHER'
+      }));
+
     } catch {
+
       return [];
     }
   }

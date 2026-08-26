@@ -3,6 +3,7 @@ package com.aidocumentreader.backend.document.service;
 import com.aidocumentreader.backend.document.dto.DocumentContent;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
+import com.aidocumentreader.backend.document.entity.DocumentType;
 import com.aidocumentreader.backend.document.repository.DocumentRepository;
 import com.aidocumentreader.backend.document.validation.PdfValidationService;
 import com.aidocumentreader.backend.exception.DocumentNotFoundException;
@@ -47,7 +48,8 @@ public class DocumentService {
 
     public Document uploadDocument(
             MultipartFile file,
-            String authenticatedEmail
+            String authenticatedEmail,
+            DocumentType documentType
     ) {
 
         pdfValidationService.validate(file);
@@ -91,6 +93,7 @@ public class DocumentService {
         document.setContentType(contentType);
         document.setFileSize(file.getSize());
         document.setSha256(sha256);
+        document.setDocumentType(documentType);
         document.setStatus(DocumentStatus.UPLOADED);
 
         try {

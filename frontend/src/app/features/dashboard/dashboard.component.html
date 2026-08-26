@@ -5,6 +5,7 @@
   <header class="navbar">
 
     <div class="brand">
+
       <div class="brand-icon">
         AI
       </div>
@@ -13,6 +14,7 @@
         <h2>Legal AI</h2>
         <span>Document Reader</span>
       </div>
+
     </div>
 
 
@@ -39,7 +41,6 @@
 
 
   <main class="dashboard-content">
-
 
     <!-- Hero -->
 
@@ -92,12 +93,10 @@
           </div>
 
           <div class="document-lines">
-
             <span></span>
             <span></span>
             <span></span>
             <span></span>
-
           </div>
 
           <div class="ai-badge">
@@ -218,6 +217,8 @@
 
       @if (recentUploads().length === 0) {
 
+      <!-- Empty State -->
+
       <div class="empty-state">
 
         <div class="empty-icon">
@@ -243,7 +244,9 @@
 
       } @else {
 
-      <div class="document-grid">
+      <!-- Document Cards -->
+
+      <div class="recent-uploads-grid">
 
         @for (
         document of recentUploads();
@@ -252,19 +255,101 @@
 
         <article class="document-card">
 
-          <div class="document-actions">
+          <!-- Card Header -->
+
+          <div class="card-header">
+
+            <div class="file-type-badge">
+              PDF
+            </div>
+
+
+            <div class="card-badges">
+
+                  <span class="document-type-badge">
+                    {{
+                      formatDocumentType(
+                        document.documentType
+                      )
+                    }}
+                  </span>
+
+              <span class="status-badge">
+                    {{ document.status }}
+                  </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- Card Body -->
+
+          <div class="card-body">
+
+            <h3
+              class="document-title"
+              [title]="document.originalFilename"
+            >
+              {{ document.originalFilename }}
+            </h3>
+
+
+            <p class="document-meta">
+
+                  <span>
+                    {{
+                      formatFileSize(
+                        document.fileSize
+                      )
+                    }}
+                  </span>
+
+              <span class="meta-dot">
+                    •
+                  </span>
+
+              <span>
+                    {{
+                      document.createdAt
+                        | date:'MMM d, y, h:mm a'
+                    }}
+                  </span>
+
+            </p>
+
+
+            <div class="document-info-row">
+
+              <div class="document-id-pill">
+                Document #{{ document.id }}
+              </div>
+
+              <div class="secure-label">
+                ✓ Stored securely
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- PDF Actions -->
+
+          <div class="card-actions">
 
             <button
               type="button"
-              class="view-button"
+              class="action-button primary-button"
               (click)="viewDocument(document)"
             >
               View PDF
             </button>
 
+
             <button
               type="button"
-              class="download-button"
+              class="action-button secondary-button"
               (click)="downloadDocument(document)"
             >
               Download
@@ -272,73 +357,16 @@
 
           </div>
 
-          <div class="document-card-top">
 
-            <div class="pdf-file-icon">
-              PDF
-            </div>
+          <!-- Analysis Action -->
 
-            <span
-              class="status-badge"
-              [class.completed]="
-                    document.status === 'COMPLETED'
-                  "
-              [class.failed]="
-                    document.status === 'FAILED'
-                  "
-            >
-                  {{ document.status }}
-                </span>
-
-          </div>
-
-
-          <div class="document-info">
-
-            <h3
-              [title]="
-                    document.originalFilename
-                  "
-            >
-              {{ document.originalFilename }}
-            </h3>
-
-
-            <div class="document-meta">
-
-                  <span>
-                    {{ formatFileSize(
-                      document.fileSize
-                    ) }}
-                  </span>
-
-              <span class="dot">
-                    •
-                  </span>
-
-              <span>
-                    {{
-                      document.createdAt
-                        | date:'medium'
-                    }}
-                  </span>
-
-            </div>
-
-          </div>
-
-
-          <div class="document-footer">
-
-                <span>
-                  Document #{{ document.id }}
-                </span>
-
-            <span class="stored">
-                  ✓ Stored securely
-                </span>
-
-          </div>
+          <button
+            type="button"
+            class="analysis-button"
+            (click)="viewAnalysis(document)"
+          >
+            View Analysis
+          </button>
 
         </article>
 

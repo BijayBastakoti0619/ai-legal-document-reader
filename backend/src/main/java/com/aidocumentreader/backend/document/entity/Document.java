@@ -54,6 +54,11 @@ public class Document {
 
     @Setter
     @Enumerated(EnumType.STRING)
+    @Column(name = "document_type", nullable = false, length = 30)
+    private DocumentType documentType;
+
+    @Setter
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private DocumentStatus status;
 
@@ -118,5 +123,9 @@ public class Document {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public DocumentType getDocumentType() {
+        return documentType;
     }
 }

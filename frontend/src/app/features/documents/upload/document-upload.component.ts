@@ -17,6 +17,7 @@ import {
 } from '../../../core/services/document.service';
 
 import {
+  DocumentType,
   DocumentUploadResponse
 } from '../../../shared/models/document.models';
 
@@ -41,6 +42,9 @@ export class DocumentUploadComponent {
 
   isUploading =
     signal(false);
+
+  selectedDocumentType =
+    signal<DocumentType | ''>('');
 
   uploadProgress =
     signal(0);
@@ -140,10 +144,12 @@ export class DocumentUploadComponent {
   }
 
 
-  upload(): void {
+  uploadDocument(): void {
 
     const file =
       this.selectedFile();
+    const documentType =
+      this.selectedDocumentType();
 
     if (!file) {
 
@@ -152,8 +158,17 @@ export class DocumentUploadComponent {
       );
 
       return;
-    }
 
+
+    }
+    if (!documentType) {
+
+      this.errorMessage.set(
+        'Please select a document type.'
+      );
+
+      return;
+    }
 
     this.resetMessages();
 
@@ -165,7 +180,7 @@ export class DocumentUploadComponent {
 
 
     this.documentService
-      .uploadDocument(file)
+      .uploadDocument(file,documentType)
       .pipe(
 
         finalize(() => {
@@ -331,5 +346,15 @@ export class DocumentUploadComponent {
     this.errorMessage.set('');
 
     this.successMessage.set('');
+  }
+
+  onDocumentTypeChange(event: Event): void {
+
+    const select =
+      event.target as HTMLSelectElement;
+
+    this.selectedDocumentType.set(
+      select.value as DocumentType | ''
+    );
   }
 }

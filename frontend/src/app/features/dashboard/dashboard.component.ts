@@ -17,7 +17,7 @@ import {
 import {
   DocumentService
 } from '../../core/services/document.service';
-import {DocumentUploadResponse} from '../../shared/models/document.models';
+import {DocumentType,DocumentUploadResponse} from '../../shared/models/document.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -197,5 +197,35 @@ export class DashboardComponent {
           );
         }
       });
+  }
+
+  formatDocumentType(
+    type: DocumentType | undefined
+  ): string {
+
+    switch (type) {
+
+      case DocumentType.LEASE:
+        return 'Lease';
+
+      case DocumentType.INSURANCE:
+        return 'Insurance';
+
+      case DocumentType.LOAN:
+        return 'Loan';
+
+      default:
+        return 'Loan';
+    }
+  }
+  viewAnalysis(
+    document: DocumentUploadResponse
+  ): void {
+
+    this.router.navigate([
+      '/documents',
+      document.id,
+      'analysis'
+    ]);
   }
 }

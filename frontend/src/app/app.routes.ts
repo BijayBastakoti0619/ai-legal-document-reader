@@ -1,33 +1,36 @@
 // src/app/app.routes.ts
 
+// src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { DocumentUploadComponent } from './features/documents/upload/document-upload.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-    {
-      path: 'register',
-      component: RegisterComponent
-    },
+  {
+    path: 'register',
+    component: RegisterComponent
+  },
   {
     path: 'login',
     component: LoginComponent
   },
- {
-    path: '',
-    redirectTo: 'register',
-    pathMatch: 'full'
-  },
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [authGuard] // <-- This is where our bouncer stands!
+    canActivate: [authGuard]
+  },
+  {
+    path: 'documents/upload',
+    component: DocumentUploadComponent,
+    canActivate: [authGuard]
   },
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: 'register',
     pathMatch: 'full'
   },
   {

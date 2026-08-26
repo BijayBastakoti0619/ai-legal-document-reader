@@ -2,6 +2,7 @@ package com.aidocumentreader.backend.document.service;
 
 import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
+import com.aidocumentreader.backend.document.dto.DocumentContent;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
 import com.aidocumentreader.backend.document.repository.DocumentRepository;
@@ -160,5 +161,65 @@ public class DocumentService {
                     cleanupException
             );
         }
+    }
+
+    public DocumentContent getDocumentContent(
+            Long documentId,
+            String authenticatedEmail
+    ) {
+
+        User authenticatedUser =
+                userService.getCurrentUser(
+                        authenticatedEmail
+                );
+
+        Document document =
+                documentRepository.findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found."
+                                )
+                        );
+
+        /*
+         * Security check:
+         * the authenticated user must own the document.
+         */
+        if (!document.getUser()
+                .getId()
+                .equals(authenticatedUser.getId())) {
+
+            /*
+             * We intentionally say "not found"
+             * instead of revealing that another
+             * user's document exists.
+             */
+            throw new DocumentNotFoundException(
+                    "Document not found."
+            );
+        }
+
+        byte[] fileBytes;
+
+        try {
+
+            fileBytes =
+                    b2StorageService.download(
+                            document.getStorageKey()
+                    );
+
+        } catch (RuntimeException exception) {
+
+            throw new DocumentUploadException(
+                    "The document could not be retrieved.",
+                    exception
+            );
+        }
+
+        return new DocumentContent(
+                document.getOriginalFilename(),
+                document.getContentType(),
+                fileBytes
+        );
     }
 }

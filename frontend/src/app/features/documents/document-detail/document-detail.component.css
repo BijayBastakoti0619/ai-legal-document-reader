@@ -1,0 +1,43 @@
+/* src/app/features/documents/document-detail/document-detail.component.css */
+:host {
+  display: block;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+.breadcrumb {
+  margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.document-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #e7e9ef;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.metadata-card {
+  background: #f8faff;
+  border: 1px solid #e7e9ef;
+  padding: 1.5rem;
+  border-radius: 12px;
+}

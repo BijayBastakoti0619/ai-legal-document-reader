@@ -1,0 +1,336 @@
+:host {
+  display: block;
+}
+
+/* Inherited button style for the empty state */
+.primary-button {
+  display: inline-block;
+
+  padding: 13px 22px;
+
+  border-radius: 10px;
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  background:
+    linear-gradient(
+      135deg,
+      #4f46e5,
+      #6d5dfc
+    );
+
+  color: white;
+
+  box-shadow:
+    0 10px 25px
+    rgba(79, 70, 229, 0.23);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+}
+
+/* =========================
+   Upload section Header
+   ========================= */
+
+.section-header {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: flex-end;
+
+  margin-bottom: 25px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 800;
+
+  color: #4f46e5;
+
+  letter-spacing: 1.5px;
+}
+
+.section-header h2 {
+  margin:
+    6px 0 4px;
+
+  font-size: 30px;
+}
+
+.section-header p {
+  margin: 0;
+
+  color: #80889b;
+}
+
+.new-upload-button {
+  text-decoration: none;
+
+  padding: 11px 18px;
+
+  background: white;
+
+  border:
+    1px solid #e3e6ed;
+
+  border-radius: 9px;
+
+  color: #344054;
+
+  font-weight: 700;
+
+  transition: 0.2s;
+}
+
+.new-upload-button:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+/* =========================
+   Empty state
+   ========================= */
+
+.empty-state {
+  padding: 60px 20px;
+
+  border-radius: 18px;
+
+  border:
+    2px dashed #d9dce5;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    );
+
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 45px;
+
+  margin-bottom: 15px;
+}
+
+.empty-state h3 {
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: #81899b;
+
+  margin-bottom: 25px;
+}
+
+/* =========================
+   Document cards
+   ========================= */
+
+.document-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(
+        290px,
+        1fr
+      )
+    );
+
+  gap: 18px;
+}
+
+.document-card {
+  background: white;
+
+  border:
+    1px solid #e7e9ef;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+
+  animation:
+    slideUp
+    0.45s ease;
+}
+
+.document-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.document-actions button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.view-button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+}
+
+.download-button {
+  background: white;
+  color: #344054;
+  border: 1px solid #d8dce5;
+}
+
+.view-button:hover {
+  background: #4338ca;
+}
+
+.download-button:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+.document-card:hover {
+  transform:
+    translateY(-5px);
+
+  border-color: #c8c5ff;
+
+  box-shadow:
+    0 16px 35px
+    rgba(
+      49,
+      46,
+      129,
+      0.1
+    );
+}
+
+.document-card-top {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: center;
+}
+
+.pdf-file-icon {
+  padding: 8px 10px;
+
+  font-size: 12px;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 800;
+
+  padding: 6px 9px;
+
+  border-radius: 999px;
+
+  color: #3730a3;
+  background: #eef2ff;
+}
+
+.status-badge.completed {
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.status-badge.failed {
+  color: #b42318;
+  background: #fef3f2;
+}
+
+.document-info h3 {
+  margin:
+    20px 0 10px;
+
+  font-size: 17px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.document-meta {
+  font-size: 12px;
+
+  color: #858da0;
+}
+
+.dot {
+  margin: 0 5px;
+}
+
+.document-footer {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  margin-top: 22px;
+
+  padding-top: 15px;
+
+  border-top:
+    1px solid #f0f1f4;
+
+  font-size: 11px;
+
+  color: #9299a8;
+}
+
+.stored {
+  color: #16835a;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(20px);
+  }
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@media (max-width: 850px) {
+  .section-header {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap: 18px;
+  }
+}

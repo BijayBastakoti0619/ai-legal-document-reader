@@ -1,0 +1,355 @@
+<div class="dashboard">
+
+  <!-- Top Navigation -->
+
+  <header class="navbar">
+
+    <div class="brand">
+      <div class="brand-icon">
+        AI
+      </div>
+
+      <div>
+        <h2>Legal AI</h2>
+        <span>Document Reader</span>
+      </div>
+    </div>
+
+
+    <div class="nav-actions">
+
+      <a
+        routerLink="/documents/upload"
+        class="upload-nav-button"
+      >
+        + Upload PDF
+      </a>
+
+      <button
+        type="button"
+        class="logout-button"
+        (click)="onLogout()"
+      >
+        Log Out
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main class="dashboard-content">
+
+
+    <!-- Hero -->
+
+    <section class="hero">
+
+      <div class="hero-content">
+
+        <span class="hero-badge">
+          AI Legal Document Reader
+        </span>
+
+        <h1>
+          Understand legal documents
+          <span>faster.</span>
+        </h1>
+
+        <p>
+          Upload your legal PDFs and prepare them
+          for AI-powered analysis and summarization.
+        </p>
+
+
+        <div class="hero-actions">
+
+          <a
+            routerLink="/documents/upload"
+            class="primary-button"
+          >
+            Upload a Document
+          </a>
+
+          <a
+            href="#recent-uploads"
+            class="secondary-button"
+          >
+            View Uploads
+          </a>
+
+        </div>
+
+      </div>
+
+
+      <div class="hero-visual">
+
+        <div class="floating-document">
+
+          <div class="pdf-icon">
+            PDF
+          </div>
+
+          <div class="document-lines">
+
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+
+          </div>
+
+          <div class="ai-badge">
+            ✨ AI Ready
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Statistics -->
+
+    <section class="stats">
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📄
+        </div>
+
+        <div>
+
+          <span class="stat-value">
+            {{ recentUploads().length }}
+          </span>
+
+          <span class="stat-label">
+            Recent Uploads
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🔐
+        </div>
+
+        <div>
+
+          <span class="stat-value">
+            Secure
+          </span>
+
+          <span class="stat-label">
+            Private Storage
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🤖
+        </div>
+
+        <div>
+
+          <span class="stat-value">
+            AI
+          </span>
+
+          <span class="stat-label">
+            Analysis Ready
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Recent Uploads -->
+
+    <section
+      id="recent-uploads"
+      class="uploads-section"
+    >
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="section-label">
+            DOCUMENTS
+          </span>
+
+          <h2>
+            Recent Uploads
+          </h2>
+
+          <p>
+            PDFs you recently uploaded.
+          </p>
+
+        </div>
+
+
+        <a
+          routerLink="/documents/upload"
+          class="new-upload-button"
+        >
+          + New Upload
+        </a>
+
+      </div>
+
+
+      @if (recentUploads().length === 0) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          📂
+        </div>
+
+        <h3>
+          No documents uploaded yet
+        </h3>
+
+        <p>
+          Upload your first PDF to get started.
+        </p>
+
+        <a
+          routerLink="/documents/upload"
+          class="primary-button"
+        >
+          Upload your first document
+        </a>
+
+      </div>
+
+      } @else {
+
+      <div class="document-grid">
+
+        @for (
+        document of recentUploads();
+        track document.id
+        ) {
+
+        <article class="document-card">
+
+          <div class="document-actions">
+
+            <button
+              type="button"
+              class="view-button"
+              (click)="viewDocument(document)"
+            >
+              View PDF
+            </button>
+
+            <button
+              type="button"
+              class="download-button"
+              (click)="downloadDocument(document)"
+            >
+              Download
+            </button>
+
+          </div>
+
+          <div class="document-card-top">
+
+            <div class="pdf-file-icon">
+              PDF
+            </div>
+
+            <span
+              class="status-badge"
+              [class.completed]="
+                    document.status === 'COMPLETED'
+                  "
+              [class.failed]="
+                    document.status === 'FAILED'
+                  "
+            >
+                  {{ document.status }}
+                </span>
+
+          </div>
+
+
+          <div class="document-info">
+
+            <h3
+              [title]="
+                    document.originalFilename
+                  "
+            >
+              {{ document.originalFilename }}
+            </h3>
+
+
+            <div class="document-meta">
+
+                  <span>
+                    {{ formatFileSize(
+                      document.fileSize
+                    ) }}
+                  </span>
+
+              <span class="dot">
+                    •
+                  </span>
+
+              <span>
+                    {{
+                      document.createdAt
+                        | date:'medium'
+                    }}
+                  </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="document-footer">
+
+                <span>
+                  Document #{{ document.id }}
+                </span>
+
+            <span class="stored">
+                  ✓ Stored securely
+                </span>
+
+          </div>
+
+        </article>
+
+        }
+
+      </div>
+
+      }
+
+    </section>
+
+  </main>
+
+</div>

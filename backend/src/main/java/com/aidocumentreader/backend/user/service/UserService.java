@@ -1,5 +1,4 @@
 package com.aidocumentreader.backend.user.service;
-
 import com.aidocumentreader.backend.user.dto.UserProfileResponse;
 import com.aidocumentreader.backend.user.entity.User;
 import com.aidocumentreader.backend.user.repository.UserRepository;
@@ -15,9 +14,18 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    public User getCurrentUser(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found with email: " + email
+                        )
+                );
+    }
+
     public UserProfileResponse getCurrentUserProfile(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        User user = getCurrentUser(email);
 
         return new UserProfileResponse(
                 user.getId(),

@@ -1,0 +1,226 @@
+<div class="upload-page">
+
+  <div class="upload-card">
+
+    <h1>
+      Upload Legal Document
+    </h1>
+
+    <p class="subtitle">
+      Upload a PDF document for analysis.
+      Maximum file size: 10 MB.
+    </p>
+
+
+    <div class="file-section">
+
+      <input
+        #fileInput
+        type="file"
+        accept=".pdf,application/pdf"
+        (change)="onFileSelected($event)"
+        [disabled]="isUploading()"
+      />
+
+    </div>
+
+    <div class="form-group document-type-group">
+
+      <label for="documentType">
+        Document Type
+      </label>
+
+      <select
+        id="documentType"
+        class="document-type-select"
+        [value]="selectedDocumentType()"
+        (change)="onDocumentTypeChange($event)"
+        [disabled]="isUploading()"
+      >
+
+        <option value="">
+          Select document type
+        </option>
+
+        <option value="LEASE">
+          Lease
+        </option>
+
+        <option value="INSURANCE">
+          Insurance
+        </option>
+
+        <option value="LOAN">
+          Loan
+        </option>
+
+      </select>
+
+    </div>
+
+
+    @if (selectedFile()) {
+
+    <div class="selected-file">
+
+      <h3>
+        Selected file
+      </h3>
+
+      <p>
+        <strong>Name:</strong>
+        {{ selectedFile()!.name }}
+      </p>
+
+      <p>
+        <strong>Size:</strong>
+
+        {{
+        formatFileSize(
+        selectedFile()!.size
+        )
+        }}
+      </p>
+
+      <p>
+        <strong>Type:</strong>
+        {{ selectedFile()!.type }}
+      </p>
+
+    </div>
+
+    }
+
+
+    @if (errorMessage()) {
+
+    <div class="error-message">
+
+      {{ errorMessage() }}
+
+    </div>
+
+    }
+
+
+    @if (successMessage()) {
+
+    <div class="success-message">
+
+      {{ successMessage() }}
+
+    </div>
+
+    }
+
+
+    @if (isUploading()) {
+
+    <div class="progress-section">
+
+      <p>
+        Uploading...
+        {{ uploadProgress() }}%
+      </p>
+
+      <progress
+        [value]="uploadProgress()"
+        max="100">
+      </progress>
+
+    </div>
+
+    }
+
+
+    <div class="actions">
+
+      <button
+        type="button"
+        class="upload-button"
+        (click)="uploadDocument()"
+        [disabled]="
+    !selectedFile() ||
+    !selectedDocumentType() ||
+    isUploading()
+  "
+      >
+        @if (isUploading()) {
+        Uploading... {{ uploadProgress() }}%
+        } @else {
+        Upload Document
+        }
+      </button>
+
+
+      @if (
+      selectedFile() &&
+      !isUploading()
+      ) {
+
+      <button
+        type="button"
+        class="clear-button"
+        (click)="
+            clearSelection(fileInput)
+          "
+      >
+        Clear
+      </button>
+
+      }
+
+    </div>
+
+
+    @if (uploadedDocument(); as document) {
+
+    <div class="uploaded-document">
+
+      <h3>
+        Upload complete
+      </h3>
+
+      <p>
+        <strong>
+          Document ID:
+        </strong>
+
+        {{ document.id }}
+      </p>
+
+      <p>
+        <strong>
+          Filename:
+        </strong>
+
+        {{ document.originalFilename }}
+      </p>
+
+      <p>
+        <strong>
+          Size:
+        </strong>
+
+        {{
+        formatFileSize(
+        document.fileSize
+        )
+        }}
+      </p>
+
+      <p>
+        <strong>
+          Status:
+        </strong>
+
+        {{ document.status }}
+      </p>
+
+    </div>
+
+    }
+
+  </div>
+
+</div>

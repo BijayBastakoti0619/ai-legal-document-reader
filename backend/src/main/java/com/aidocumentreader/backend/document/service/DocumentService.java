@@ -221,4 +221,52 @@ public class DocumentService {
                 fileBytes
         );
     }
+
+    public void deleteDocument(
+            Long documentId,
+            String authenticatedEmail
+    ) {
+
+        User authenticatedUser =
+                userService.getCurrentUser(
+                        authenticatedEmail
+                );
+
+        Document document =
+                documentRepository.findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found."
+                                )
+                        );
+
+        if (!document.getUser()
+                .getId()
+                .equals(authenticatedUser.getId())) {
+
+            throw new DocumentNotFoundException(
+                    "Document not found."
+            );
+        }
+
+        if (document.getStatus()
+                == DocumentStatus.DELETED) {
+
+            throw new DocumentNotFoundException(
+                    "Document not found."
+            );
+        }
+
+        b2StorageService.delete(
+                document.getStorageKey()
+        );
+
+        document.setStatus(
+                DocumentStatus.DELETED
+        );
+
+        documentRepository.saveAndFlush(
+                document
+        );
+    }
 }

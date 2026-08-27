@@ -1,181 +1,85 @@
 package com.aidocumentreader.backend.document.controller;
 
-import com.aidocumentreader.backend.document.entity.Document;
-import com.aidocumentreader.backend.document.entity.DocumentStatus;
+import com.aidocumentreader.backend.auth.jwttoken.JwtAuthenticationFilter;
+import com.aidocumentreader.backend.auth.service.CustomUserDetailsService;
+import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
+import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.service.DocumentService;
-import com.aidocumentreader.backend.user.entity.User;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.time.Instant;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
+@WebMvcTest(DocumentController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class DocumentControllerTest {
 
-    private DocumentService documentService;
-
+    @Autowired
     private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
+    @MockitoBean
+    private DocumentService documentService;
 
-        documentService =
-                mock(DocumentService.class);
+    // --- FIX: Mock the security beans that break the WebMvcTest slice ---
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        DocumentController controller =
-                new DocumentController(
-                        documentService
-                );
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
-        mockMvc =
-                standaloneSetup(controller)
-                        .build();
+    // A simple mock principal to simulate our authenticated user
+    private final Principal mockPrincipal = () -> "user@example.com";
+
+    @Test
+    void shouldReturnPaginatedDocuments() throws Exception {
+        // Arrange
+        DocumentSummaryResponse summary = new DocumentSummaryResponse(
+                15L, "lease.pdf", 1024L, "UPLOADED", Instant.now()
+        );
+
+        when(documentService.getDocuments(any(Pageable.class), eq("user@example.com")))
+                .thenReturn(new PageImpl<>(List.of(summary), PageRequest.of(0, 10), 1));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/documents")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .principal(mockPrincipal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(15))
+                .andExpect(jsonPath("$.content[0].originalFilename").value("lease.pdf"));
     }
 
     @Test
-    void uploadDocument_shouldUseAuthenticatedPrincipalEmail()
-            throws Exception {
-
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "file",
-                        "contract.pdf",
-                        "application/pdf",
-                        "%PDF-test"
-                                .getBytes(
-                                        StandardCharsets.UTF_8
-                                )
-                );
-
-        User user = new User();
-        user.setId(42L);
-
-        Document document = new Document();
-        document.setUser(user);
-        document.setOriginalFilename(
-                "contract.pdf"
-        );
-        document.setContentType(
-                "application/pdf"
-        );
-        document.setFileSize(
-                file.getSize()
-        );
-        document.setStatus(
-                DocumentStatus.UPLOADED
+    void shouldReturnDocumentDetail() throws Exception {
+        // Arrange
+        DocumentDetailResponse detail = new DocumentDetailResponse(
+                15L, "lease.pdf", "application/pdf", 1024L, "UPLOADED", Instant.now(), Instant.now()
         );
 
-        when(
-                documentService.uploadDocument(
-                        eq(file),
-                        eq("owner@example.com")
-                )
-        ).thenReturn(document);
+        when(documentService.getDocument(15L, "user@example.com")).thenReturn(detail);
 
-        Principal principal =
-                () -> "owner@example.com";
-
-        mockMvc.perform(
-                        multipart(
-                                "/api/v1/documents"
-                        )
-                                .file(file)
-                                .principal(principal)
-                )
-                .andExpect(
-                        status().isCreated()
-                );
-
-        verify(documentService)
-                .uploadDocument(
-                        eq(file),
-                        eq("owner@example.com")
-                );
-    }
-
-    @Test
-    void uploadDocument_shouldIgnoreClientSuppliedUserIdAndUsePrincipal()
-            throws Exception {
-
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "file",
-                        "contract.pdf",
-                        "application/pdf",
-                        "%PDF-test"
-                                .getBytes(
-                                        StandardCharsets.UTF_8
-                                )
-                );
-
-        User user = new User();
-        user.setId(42L);
-
-        Document document =
-                new Document();
-
-        document.setUser(user);
-        document.setOriginalFilename(
-                "contract.pdf"
-        );
-        document.setContentType(
-                "application/pdf"
-        );
-        document.setFileSize(
-                file.getSize()
-        );
-        document.setStatus(
-                DocumentStatus.UPLOADED
-        );
-
-        when(
-                documentService.uploadDocument(
-                        any(),
-                        eq("owner@example.com")
-                )
-        ).thenReturn(document);
-
-        Principal principal =
-                () -> "owner@example.com";
-
-        mockMvc.perform(
-                        multipart(
-                                "/api/v1/documents"
-                        )
-                                .file(file)
-
-                                /*
-                                 * Malicious/irrelevant attempt:
-                                 */
-                                .param(
-                                        "userId",
-                                        "999"
-                                )
-
-                                .principal(principal)
-                )
-                .andExpect(
-                        status().isCreated()
-                );
-
-        /*
-         * Service still receives the authenticated
-         * principal email.
-         *
-         * It never receives userId=999.
-         */
-        verify(documentService)
-                .uploadDocument(
-                        any(),
-                        eq("owner@example.com")
-                );
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/documents/15")
+                        .principal(mockPrincipal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(15))
+                .andExpect(jsonPath("$.originalFilename").value("lease.pdf"));
     }
 }

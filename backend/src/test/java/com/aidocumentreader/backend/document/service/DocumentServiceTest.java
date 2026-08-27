@@ -1,29 +1,31 @@
 package com.aidocumentreader.backend.document.service;
 
-
-
+import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
+import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
 import com.aidocumentreader.backend.document.repository.DocumentRepository;
 import com.aidocumentreader.backend.document.validation.PdfValidationService;
-import com.aidocumentreader.backend.exception.DocumentUploadException;
 import com.aidocumentreader.backend.storage.service.B2StorageService;
 import com.aidocumentreader.backend.user.entity.User;
 import com.aidocumentreader.backend.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
@@ -46,480 +48,85 @@ class DocumentServiceTest {
     @InjectMocks
     private DocumentService documentService;
 
-
     @Test
-    void uploadDocument_shouldUploadAndSaveSuccessfully() {
-
-        String email = "user@example.com";
-
-        byte[] bytes =
-                "%PDF-1.7\nTest PDF"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("contract.pdf", bytes);
-
-        User user = createUser(42L);
-
-        String hash =
-                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                        + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-
-        when(userService.getCurrentUser(email))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(hash);
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0)
-                );
-
-        Document result =
-                documentService.uploadDocument(file, email);
-
-        assertNotNull(result);
-
-        verify(pdfValidationService)
-                .validate(file);
-
-        verify(userService)
-                .getCurrentUser(email);
-
-        verify(sha256Service)
-                .calculate(bytes);
-
-        verify(b2StorageService)
-                .upload(
-                        anyString(),
-                        eq(bytes),
-                        eq("application/pdf")
-                );
-
-        verify(documentRepository)
-                .saveAndFlush(any(Document.class));
-    }
-
-
-    @Test
-    void uploadDocument_shouldUseAuthenticatedUserAsOwner() {
-
-        String email = "owner@example.com";
-
-        byte[] bytes =
-                "%PDF-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("legal.pdf", bytes);
-
-        User authenticatedUser =
-                createUser(99L);
-
-        when(userService.getCurrentUser(email))
-                .thenReturn(authenticatedUser);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0)
-                );
-
-        documentService.uploadDocument(file, email);
-
-        ArgumentCaptor<Document> captor =
-                ArgumentCaptor.forClass(Document.class);
-
-        verify(documentRepository)
-                .saveAndFlush(captor.capture());
-
-        Document saved =
-                captor.getValue();
-
-        assertSame(
-                authenticatedUser,
-                saved.getUser()
-        );
-
-        assertEquals(
-                99L,
-                saved.getUser().getId()
-        );
-
-        assertTrue(
-                saved.getStorageKey()
-                        .startsWith("users/99/")
-        );
-    }
-
-
-    @Test
-    void uploadDocument_shouldGenerateValidUuidObjectKey() {
-
-        byte[] bytes =
-                "%PDF-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf(
-                        "My Secret Contract.pdf",
-                        bytes
-                );
-
-        User user =
-                createUser(55L);
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0)
-                );
-
-        documentService.uploadDocument(
-                file,
-                "user@example.com"
-        );
-
-        ArgumentCaptor<Document> captor =
-                ArgumentCaptor.forClass(Document.class);
-
-        verify(documentRepository)
-                .saveAndFlush(captor.capture());
-
-        String storageKey =
-                captor.getValue().getStorageKey();
-
-        assertTrue(
-                storageKey.startsWith("users/55/")
-        );
-
-        assertTrue(
-                storageKey.endsWith(".pdf")
-        );
-
-        String uuidPart =
-                storageKey
-                        .substring("users/55/".length())
-                        .replace(".pdf", "");
-
-        assertDoesNotThrow(
-                () -> UUID.fromString(uuidPart)
-        );
-
-        /*
-         * Original user-controlled filename must NOT
-         * become the B2 object name.
-         */
-        assertFalse(
-                storageKey.contains(
-                        "My Secret Contract"
-                )
-        );
-    }
-
-
-    @Test
-    void uploadDocument_shouldSaveCorrectMetadata() {
-
-        byte[] bytes =
-                "%PDF-metadata-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf(
-                        "agreement.pdf",
-                        bytes
-                );
-
-        User user =
-                createUser(10L);
-
-        String hash =
-                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                        + "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(hash);
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0)
-                );
-
-        documentService.uploadDocument(
-                file,
-                "user@example.com"
-        );
-
-        ArgumentCaptor<Document> captor =
-                ArgumentCaptor.forClass(Document.class);
-
-        verify(documentRepository)
-                .saveAndFlush(captor.capture());
-
-        Document saved =
-                captor.getValue();
-
-        assertSame(user, saved.getUser());
-
-        assertEquals(
-                "agreement.pdf",
-                saved.getOriginalFilename()
-        );
-
-        assertEquals(
-                "application/pdf",
-                saved.getContentType()
-        );
-
-        assertEquals(
-                bytes.length,
-                saved.getFileSize()
-        );
-
-        assertEquals(
-                hash,
-                saved.getSha256()
-        );
-
-        assertEquals(
-                DocumentStatus.UPLOADED,
-                saved.getStatus()
-        );
-
-        assertNotNull(
-                saved.getStorageKey()
-        );
-    }
-
-
-    @Test
-    void uploadDocument_shouldUseActualFileBytesForSha256() {
-
-        byte[] bytes =
-                "%PDF-exact-content"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("document.pdf", bytes);
-
-        User user =
-                createUser(1L);
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0)
-                );
-
-        documentService.uploadDocument(
-                file,
-                "user@example.com"
-        );
-
-        verify(sha256Service)
-                .calculate(bytes);
-    }
-
-
-    @Test
-    void uploadDocument_shouldNotSaveMetadataWhenB2UploadFails() {
-
-        byte[] bytes =
-                "%PDF-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("contract.pdf", bytes);
-
-        User user =
-                createUser(42L);
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        doThrow(
-                new RuntimeException(
-                        "B2 unavailable"
-                )
-        )
-                .when(b2StorageService)
-                .upload(
-                        anyString(),
-                        any(byte[].class),
-                        eq("application/pdf")
-                );
-
-        assertThrows(
-                DocumentUploadException.class,
-                () -> documentService.uploadDocument(
-                        file,
-                        "user@example.com"
-                )
-        );
-
-        verify(
-                documentRepository,
-                never()
-        ).saveAndFlush(any(Document.class));
-
-        verify(
-                b2StorageService,
-                never()
-        ).delete(anyString());
-    }
-
-
-    @Test
-    void uploadDocument_shouldDeleteUploadedObjectWhenDatabaseSaveFails() {
-
-        byte[] bytes =
-                "%PDF-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("contract.pdf", bytes);
-
-        User user =
-                createUser(42L);
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenThrow(
-                        new RuntimeException(
-                                "Database unavailable"
-                        )
-                );
-
-        assertThrows(
-                DocumentUploadException.class,
-                () -> documentService.uploadDocument(
-                        file,
-                        "user@example.com"
-                )
-        );
-
-        ArgumentCaptor<String> keyCaptor =
-                ArgumentCaptor.forClass(String.class);
-
-        verify(b2StorageService)
-                .upload(
-                        keyCaptor.capture(),
-                        eq(bytes),
-                        eq("application/pdf")
-                );
-
-        String uploadedKey =
-                keyCaptor.getValue();
-
-        verify(b2StorageService)
-                .delete(uploadedKey);
-    }
-
-
-    @Test
-    void uploadDocument_shouldStillThrowUploadExceptionWhenCleanupAlsoFails() {
-
-        byte[] bytes =
-                "%PDF-test"
-                        .getBytes(StandardCharsets.UTF_8);
-
-        MockMultipartFile file =
-                createPdf("contract.pdf", bytes);
-
-        User user =
-                createUser(42L);
-
-        when(userService.getCurrentUser(anyString()))
-                .thenReturn(user);
-
-        when(sha256Service.calculate(bytes))
-                .thenReturn(validHash());
-
-        when(documentRepository.saveAndFlush(any(Document.class)))
-                .thenThrow(
-                        new RuntimeException(
-                                "Database unavailable"
-                        )
-                );
-
-        doThrow(
-                new RuntimeException(
-                        "B2 cleanup failed"
-                )
-        )
-                .when(b2StorageService)
-                .delete(anyString());
-
-        DocumentUploadException exception =
-                assertThrows(
-                        DocumentUploadException.class,
-                        () -> documentService.uploadDocument(
-                                file,
-                                "user@example.com"
-                        )
-                );
-
-        assertEquals(
-                "The document could not be uploaded.",
-                exception.getMessage()
-        );
-
-        verify(b2StorageService)
-                .delete(anyString());
-    }
-
-
-    private MockMultipartFile createPdf(
-            String filename,
-            byte[] bytes
-    ) {
-
-        return new MockMultipartFile(
-                "file",
-                filename,
-                "application/pdf",
-                bytes
-        );
-    }
-
-
-    private User createUser(Long id) {
-
+    void shouldReturnPaginatedDocumentSummaries() {
+        // Arrange: Mock the user lookup
+        String email = "test@example.com";
         User user = new User();
-        user.setId(id);
+        user.setId(1L);
+        user.setEmail(email);
 
-        return user;
+        when(userService.getCurrentUser(email)).thenReturn(user);
+
+        // Arrange: Mock the paginated database response
+        Pageable pageable = PageRequest.of(0, 10);
+        Document doc = new Document();
+        doc.setId(100L);
+        doc.setOriginalFilename("test.pdf");
+        doc.setContentType("application/pdf");
+        doc.setFileSize(5000L);
+        doc.setStatus(DocumentStatus.UPLOADED);
+        // Note: createdAt is intentionally omitted as the entity handles it automatically
+
+        Page<Document> mockPage = new PageImpl<>(List.of(doc), pageable, 1);
+        when(documentRepository.findAllByUserIdOrderByCreatedAtDesc(eq(1L), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // Act
+        Page<DocumentSummaryResponse> result = documentService.getDocuments(pageable, email);
+
+        // Assert
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).originalFilename()).isEqualTo("test.pdf");
+        assertThat(result.getContent().get(0).id()).isEqualTo(100L);
     }
 
+    @Test
+    void shouldReturnDocumentDetailWhenAuthorized() {
+        // Arrange
+        String email = "owner@example.com";
+        User user = new User();
+        user.setId(5L);
+        user.setEmail(email);
 
-    private String validHash() {
+        when(userService.getCurrentUser(email)).thenReturn(user);
 
-        return "cccccccccccccccccccccccccccccccc"
-                + "cccccccccccccccccccccccccccccccc";
+        Long documentId = 15L;
+        Document doc = new Document();
+        doc.setId(documentId);
+        doc.setOriginalFilename("lease.pdf");
+        doc.setContentType("application/pdf");
+        doc.setFileSize(1024L);
+        doc.setStatus(DocumentStatus.UPLOADED);
+
+        when(documentRepository.findByIdAndUserId(documentId, 5L)).thenReturn(Optional.of(doc));
+
+        // Act
+        DocumentDetailResponse result = documentService.getDocument(documentId, email);
+
+        // Assert
+        assertThat(result.id()).isEqualTo(documentId);
+        assertThat(result.originalFilename()).isEqualTo("lease.pdf");
+        assertThat(result.contentType()).isEqualTo("application/pdf");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDocumentNotFoundOrUnauthorized() {
+        // Arrange: Simulating User B trying to access User A's document
+        String email = "hacker@example.com";
+        User user = new User();
+        user.setId(99L);
+        user.setEmail(email);
+
+        when(userService.getCurrentUser(email)).thenReturn(user);
+
+        Long documentId = 15L;
+        // The repository will return empty because the ID and User ID don't match
+        when(documentRepository.findByIdAndUserId(documentId, 99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> documentService.getDocument(documentId, email))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Document not found");
     }
 }

@@ -1,35 +1,52 @@
-// src/app/features/documents/document-history/document-history.component.ts
-
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { DocumentService } from '../../../core/services/document.service';
-import { DocumentSummary } from '../../../shared/models/document.models';
 
 @Component({
   selector: 'app-document-history',
   standalone: true,
-  imports: [DatePipe, RouterLink], // Required for formatting dates and the "New Upload" link
+  imports: [DatePipe, RouterLink],
   templateUrl: './document-history.component.html',
   styleUrl: './document-history.component.css'
 })
 export class DocumentHistoryComponent implements OnInit {
   private readonly documentService = inject(DocumentService);
+  private readonly router = inject(Router);
 
-  // Initialize strictly to pass the "should show loading state initially" test
   isLoading = signal(true);
   hasError = signal(false);
-  documents = signal<DocumentSummary[]>([]);
+  documents = signal<any[]>([]);
+
+  // --- NEW: Filter State & Computed Signal ---
+  selectedFilter = signal<string>('ALL');
+
+  filteredDocuments = computed(() => {
+    const docs = this.documents();
+    const filter = this.selectedFilter();
+
+    if (filter === 'ALL') {
+      return docs;
+    }
+    return docs.filter(doc => doc.documentType === filter);
+  });
+
+  // Pagination State
+  currentPage = signal(0);
+  totalPages = signal(1);
 
   ngOnInit(): void {
-    this.loadDocuments();
+    this.loadDocuments(this.currentPage());
   }
 
-  private loadDocuments(): void {
-    // 1. Fetch page 0, size 10 from the Spring Boot API
-    this.documentService.getDocuments(0, 10).subscribe({
+private loadDocuments(page: number): void {
+    this.isLoading.set(true);
+    // FIX: Changed from 6 to 3 so it creates exactly 1 row of cards!
+    this.documentService.getDocuments(page, 3).subscribe({
       next: (response) => {
         this.documents.set(response.content);
+        this.totalPages.set(response.page?.totalPages || 1);
+        this.currentPage.set(page);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -40,15 +57,42 @@ export class DocumentHistoryComponent implements OnInit {
     });
   }
 
-  // --- RESTORED HELPER METHODS (From your friend's original dashboard) ---
+  // --- NEW: Filter Handler ---
+  onFilterChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedFilter.set(value);
+  }
 
+  // Pagination Methods
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.loadDocuments(this.currentPage() + 1);
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage() > 0) {
+      this.loadDocuments(this.currentPage() - 1);
+    }
+  }
+
+  // Helper Methods
   formatFileSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} bytes`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   }
 
-  viewDocument(document: DocumentSummary): void {
+  formatDocumentType(type: string | undefined): string {
+    switch (type) {
+      case 'LEASE': return 'Lease';
+      case 'INSURANCE': return 'Insurance';
+      case 'LOAN': return 'Loan';
+      default: return 'Loan';
+    }
+  }
+
+  viewDocument(document: any): void {
     const newWindow = window.open('', '_blank');
     this.documentService.getDocumentContent(document.id).subscribe({
       next: (blob) => {
@@ -65,7 +109,7 @@ export class DocumentHistoryComponent implements OnInit {
     });
   }
 
-  downloadDocument(document: DocumentSummary): void {
+  downloadDocument(document: any): void {
     this.documentService.getDocumentContent(document.id).subscribe({
       next: (blob) => {
         const pdfBlob = new Blob([blob], { type: 'application/pdf' });
@@ -83,5 +127,9 @@ export class DocumentHistoryComponent implements OnInit {
         alert('The PDF could not be downloaded.');
       }
     });
+  }
+
+  viewAnalysis(document: any): void {
+    this.router.navigate(['/documents', document.id, 'analysis']);
   }
 }

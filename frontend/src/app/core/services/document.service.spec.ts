@@ -9,7 +9,8 @@ import {
   DocumentUploadResponse,
   DocumentSummary,
   DocumentDetail,
-  PaginatedResponse
+  PaginatedResponse,
+  DocumentType // <-- 1. NEW: Imported the enum
 } from '../../shared/models/document.models';
 
 describe('DocumentService', () => {
@@ -41,11 +42,13 @@ describe('DocumentService', () => {
       contentType: 'application/pdf',
       fileSize: 13,
       status: 'UPLOADED',
-      createdAt: '2026-08-26T12:00:00Z'
+      createdAt: '2026-08-26T12:00:00Z',
+      documentType: DocumentType.LOAN // <-- 2. FIX: Added the missing required property
     };
 
     // Act
-    service.uploadDocument(mockFile).subscribe();
+    // <-- 3. FIX: Passed DocumentType.LOAN as the required second argument
+    service.uploadDocument(mockFile, DocumentType.LOAN).subscribe();
 
     // Assert (HTTP Level)
     const req = httpMock.expectOne(`${environment.apiUrl}/documents`);

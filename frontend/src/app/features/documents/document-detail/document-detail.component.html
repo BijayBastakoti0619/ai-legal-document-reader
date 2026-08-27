@@ -1,7 +1,8 @@
 <!-- src/app/features/documents/document-detail/document-detail.component.html -->
 <div class="detail-container">
   <div class="breadcrumb">
-    <a routerLink="/dashboard">← Back to Dashboard</a>
+    <!-- Ensure the routerLink attribute explicitly says "/documents" -->
+    <a routerLink="/documents/history" class="back-link">&larr; Back to History</a>
   </div>
 
   @if (isLoading()) {

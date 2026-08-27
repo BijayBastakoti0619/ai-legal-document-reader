@@ -895,10 +895,20 @@
 .card-actions {
   display: grid;
 
-  grid-template-columns:
-    1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
 
   gap: 12px;
+}
+.delete-button {
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  color: #dc2626;
+}
+
+.delete-button:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
 }
 
 .action-button {

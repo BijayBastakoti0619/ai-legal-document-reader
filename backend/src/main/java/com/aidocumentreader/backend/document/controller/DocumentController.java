@@ -90,4 +90,20 @@ public class DocumentController {
                         content.bytes()
                 );
     }
+
+    @DeleteMapping("/{documentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDocument(
+            @PathVariable Long documentId,
+            Principal principal
+    ) {
+
+        String authenticatedEmail =
+                principal.getName();
+
+        documentService.deleteDocument(
+                documentId,
+                authenticatedEmail
+        );
+    }
 }

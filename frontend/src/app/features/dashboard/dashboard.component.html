@@ -204,14 +204,6 @@
 
         </div>
 
-
-        <a
-          routerLink="/documents/upload"
-          class="new-upload-button"
-        >
-          + New Upload
-        </a>
-
       </div>
 
 
@@ -353,6 +345,14 @@
               (click)="downloadDocument(document)"
             >
               Download
+            </button>
+
+            <button
+              type="button"
+              class="action-button delete-button"
+              (click)="deleteDocument(document)"
+            >
+              Delete
             </button>
 
           </div>

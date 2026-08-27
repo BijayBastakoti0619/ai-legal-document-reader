@@ -2,7 +2,7 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { of } from 'rxjs';
@@ -11,22 +11,19 @@ describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let mockAuthService: Partial<AuthService>;
-  let mockRouter: Partial<Router>;
 
   beforeEach(async () => {
-    // Mock the dependencies so we don't make real network calls
+    // Mock only the AuthService so we don't make real network calls
     mockAuthService = {
       login: () => of({ accessToken: 'mock', refreshToken: 'mock', tokenType: 'Bearer', expiresIn: 900 })
-    };
-    mockRouter = {
-      navigate: () => Promise.resolve(true)
     };
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter }
+        // FIX: Provide a dummy route so the router doesn't panic on success!
+        provideRouter([{ path: 'dashboard', children: [] }])
       ]
     }).compileComponents();
 

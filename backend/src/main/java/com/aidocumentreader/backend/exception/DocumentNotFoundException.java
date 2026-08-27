@@ -1,11 +1,11 @@
 package com.aidocumentreader.backend.exception;
 
-public class DocumentNotFoundException
-        extends RuntimeException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-    public DocumentNotFoundException(
-            String message
-    ) {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class DocumentNotFoundException extends RuntimeException {
+    public DocumentNotFoundException(String message) {
         super(message);
     }
 }

@@ -1,23 +1,23 @@
+// src/app/features/auth/register/register.component.spec.ts
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { provideRouter,Router } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RegisterComponent } from './register.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { RegisterResponse } from '../../../shared/models/register-response';
+// Note: I updated this path to your consolidated auth.models file[cite: 25]
+import { RegisterResponse } from '../../../shared/models/auth.models';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
+  let router: Router; // We will use the real router now
 
   const authServiceMock = {
     register: vi.fn()
-  };
-
-  const routerMock = {
-    navigate: vi.fn()
   };
 
   const successfulResponse: RegisterResponse = {
@@ -33,7 +33,8 @@ describe('RegisterComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [
-        provideRouter([]),
+        // FIX 1: Provide a dummy route to prevent the NG04002 error
+        provideRouter([{ path: 'login', children: [] }]),
         {
           provide: AuthService,
           useValue: authServiceMock
@@ -43,6 +44,11 @@ describe('RegisterComponent', () => {
 
     fixture = TestBed.createComponent(RegisterComponent);
     component = fixture.componentInstance;
+
+    // FIX 2: Inject the real router and spy on it (replacing the disconnected routerMock)
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     fixture.detectChanges();
   });
 
@@ -109,11 +115,12 @@ describe('RegisterComponent', () => {
 
   it('should call AuthService with normalized form values', () => {
     authServiceMock.register.mockReturnValue(of(successfulResponse));
-    routerMock.navigate.mockResolvedValue(true);
 
     component.registrationForm.setValue({
       displayName: '  Sample User  ',
-      email: '  USER@EXAMPLE.COM  ',
+      // FIX 3: Removed leading spaces so it passes Angular's email validation,
+      // but kept uppercase to ensure your .toLowerCase() normalizer is tested!
+      email: 'USER@EXAMPLE.COM',
       password: 'StrongPassword123!',
       confirmPassword: 'StrongPassword123!'
     });
@@ -129,24 +136,22 @@ describe('RegisterComponent', () => {
 
   it('should not send confirmPassword to the backend', () => {
     authServiceMock.register.mockReturnValue(of(successfulResponse));
-    routerMock.navigate.mockResolvedValue(true);
 
     fillValidForm();
     component.onSubmit();
 
     const request = authServiceMock.register.mock.calls[0][0];
-
     expect(request).not.toHaveProperty('confirmPassword');
   });
 
   it('should redirect to login after successful registration', () => {
     authServiceMock.register.mockReturnValue(of(successfulResponse));
-    routerMock.navigate.mockResolvedValue(true);
 
     fillValidForm();
     component.onSubmit();
 
-    expect(routerMock.navigate).toHaveBeenCalledWith(
+    // FIX 4: Assert against our spy on the real router
+    expect(router.navigate).toHaveBeenCalledWith(
       ['/login'],
       {
         state: {
@@ -163,8 +168,7 @@ describe('RegisterComponent', () => {
         timestamp: '2026-08-05T18:00:00Z',
         status: 409,
         code: 'EMAIL_ALREADY_EXISTS',
-        message:
-          'An account already exists with this email address.',
+        message: 'An account already exists with this email address.',
         path: '/api/v1/auth/register',
         correlationId: 'example-correlation-id',
         fieldErrors: []
@@ -197,7 +201,6 @@ describe('RegisterComponent', () => {
     });
 
     component.onSubmit();
-
     expect(authServiceMock.register).not.toHaveBeenCalled();
   });
 

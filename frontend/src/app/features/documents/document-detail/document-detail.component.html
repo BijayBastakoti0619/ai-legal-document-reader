@@ -1,0 +1,29 @@
+<!-- src/app/features/documents/document-detail/document-detail.component.html -->
+<div class="detail-container">
+  <div class="breadcrumb">
+    <!-- Ensure the routerLink attribute explicitly says "/documents" -->
+    <a routerLink="/documents/history" class="back-link">&larr; Back to History</a>
+  </div>
+
+  @if (isLoading()) {
+  <div class="loading-state">
+    <p>Loading document details...</p>
+  </div>
+  } @else if (hasError()) {
+  <div class="error-state">
+    <h3>Document Not Found</h3>
+    <p>This document doesn't exist, or you do not have permission to view it.</p>
+  </div>
+  } @else if (document()) {
+  <div class="document-header">
+    <h2>{{ document()?.originalFilename }}</h2>
+    <span class="status-badge">{{ document()?.status }}</span>
+  </div>
+
+  <div class="metadata-card">
+    <p><strong>File Size:</strong> {{ document()?.fileSize }} bytes</p>
+    <p><strong>Uploaded:</strong> {{ document()?.createdAt | date:'medium' }}</p>
+    <p><strong>Content Type:</strong> {{ document()?.contentType }}</p>
+  </div>
+  }
+</div>

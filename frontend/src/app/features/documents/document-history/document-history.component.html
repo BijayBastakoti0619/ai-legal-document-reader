@@ -1,0 +1,108 @@
+<div class="history-container">
+
+  <!-- FIX: Centered text with right-aligned actions -->
+  <!-- FIX: 3-Column Grid Header for Left, Center, and Right alignment -->
+  <div class="section-header">
+    <div class="header-left">
+      <a routerLink="/dashboard" class="back-link">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="header-titles">
+      <span class="section-label">DOCUMENTS</span>
+      <h2>Document History</h2>
+      <p>All your uploaded legal documents.</p>
+    </div>
+
+    <div class="header-actions">
+      <select class="filter-dropdown" (change)="onFilterChange($event)">
+        <option value="ALL">All Categories</option>
+        <option value="LOAN">Loan</option>
+        <option value="LEASE">Lease</option>
+        <option value="INSURANCE">Insurance</option>
+      </select>
+      <a routerLink="/documents/upload" class="new-upload-button">+ New Upload</a>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+  <div class="loading-state" style="text-align: center; padding: 4rem;">
+    <p style="color: #6b7280; font-size: 1.125rem;">Fetching your documents securely...</p>
+  </div>
+  } @else if (hasError()) {
+  <div class="error-state" style="text-align: center; padding: 4rem; color: #ef4444;">
+    <h3>We couldn't load your documents.</h3>
+    <p>Please try refreshing the page or checking your connection.</p>
+  </div>
+  } @else if (documents().length === 0) {
+  <div class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>No documents uploaded yet</h3>
+    <p>Upload your first PDF to get started.</p>
+    <a routerLink="/documents/upload" class="primary-button">Upload your first document</a>
+  </div>
+  } @else {
+
+  <!-- FIX: Now looping over the filtered list so the dropdown works! -->
+  <div class="recent-uploads-grid">
+    @for (document of filteredDocuments(); track document.id) {
+    <article class="document-card">
+
+      <div class="card-header">
+        <div class="file-type-badge">PDF</div>
+        <div class="card-badges">
+          <span class="document-type-badge">{{ formatDocumentType(document.documentType) }}</span>
+          <span class="status-badge" [class.completed]="document.status === 'COMPLETED'" [class.failed]="document.status === 'FAILED'">
+                {{ document.status }}
+              </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="document-title" [title]="document.originalFilename">
+          <a [routerLink]="['/documents', document.id]" style="text-decoration: none; color: inherit;">
+            {{ document.originalFilename }}
+          </a>
+        </h3>
+        <p class="document-meta">
+          <span>{{ formatFileSize(document.fileSize) }}</span>
+          <span class="meta-dot">•</span>
+          <span>{{ document.createdAt | date:'MMM d, y, h:mm a' }}</span>
+        </p>
+        <div class="document-info-row">
+          <div class="document-id-pill">Document #{{ document.id }}</div>
+          <div class="secure-label">✓ Stored securely</div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button type="button" class="action-button primary-button" (click)="viewDocument(document)">View PDF</button>
+        <button type="button" class="action-button secondary-button" (click)="downloadDocument(document)">Download</button>
+      </div>
+
+      <button type="button" class="analysis-button" (click)="viewAnalysis(document)">View Analysis</button>
+    </article>
+    }
+
+    @if (filteredDocuments().length === 0) {
+    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748b;">
+      No documents match this category on this page.
+    </div>
+    }
+  </div>
+
+  <!-- FIX: Kept intact, CSS will force this to the absolute bottom -->
+  <div class="pagination-controls">
+    <button class="page-btn" [disabled]="currentPage() === 0" (click)="previousPage()">
+      &larr; Prev
+    </button>
+
+    <span class="page-info">
+        Page {{ currentPage() + 1 }} of {{ totalPages() }}
+      </span>
+
+    <button class="page-btn" [disabled]="currentPage() >= totalPages() - 1" (click)="nextPage()">
+      Next &rarr;
+    </button>
+  </div>
+  }
+</div>

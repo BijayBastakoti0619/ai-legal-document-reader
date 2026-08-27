@@ -84,3 +84,32 @@ button:disabled {
 .uploaded-document p {
   margin: 6px 0;
 }
+
+.document-type-group {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.document-type-group label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.document-type-select {
+  width: 100%;
+  max-width: 320px;
+  padding: 11px 12px;
+  border: 1px solid #d7dbe7;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.document-type-select:focus {
+  outline: 2px solid rgba(79, 70, 229, 0.15);
+  border-color: #4f46e5;
+}

@@ -5,6 +5,7 @@ import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.dto.DocumentContent;
 import com.aidocumentreader.backend.document.dto.DocumentUploadResponse;
 import com.aidocumentreader.backend.document.entity.Document;
+import com.aidocumentreader.backend.document.entity.DocumentType;
 import com.aidocumentreader.backend.document.service.DocumentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,7 @@ public class DocumentController {
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentUploadResponse uploadDocument(
             @RequestParam("file") MultipartFile file,
+            @RequestParam("documentType") DocumentType documentType,
             Principal principal
     ) {
         String authenticatedEmail = principal.getName();
@@ -38,7 +40,8 @@ public class DocumentController {
         Document document =
                 documentService.uploadDocument(
                         file,
-                        authenticatedEmail
+                        authenticatedEmail,
+                        documentType
                 );
 
         return new DocumentUploadResponse(
@@ -46,6 +49,7 @@ public class DocumentController {
                 document.getOriginalFilename(),
                 document.getContentType(),
                 document.getFileSize(),
+                document.getDocumentType(),
                 document.getStatus(),
                 document.getCreatedAt()
         );

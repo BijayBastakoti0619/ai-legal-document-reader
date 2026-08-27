@@ -8,6 +8,7 @@ import { DocumentUploadComponent } from './features/documents/upload/document-up
 import { DocumentDetailComponent } from './features/documents/document-detail/document-detail.component';
 import { DocumentHistoryComponent } from './features/documents/document-history/document-history.component'; // <-- NEW
 import { authGuard } from './core/guards/auth.guard';
+import {DocumentAnalysisComponent} from './features/documents/analysis/document-analysis.component';
 
 export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -26,6 +27,11 @@ export const routes: Routes = [
   {
     path: 'documents/history',
     component: DocumentHistoryComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'documents/:id/analysis',
+    component: DocumentAnalysisComponent,
     canActivate: [authGuard]
   },
   {

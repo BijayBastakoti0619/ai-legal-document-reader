@@ -91,6 +91,27 @@ export class DocumentService {
       JSON.stringify(updatedDocuments)
     );
   }
+  removeRecentUpload(
+    documentId: number
+  ): void {
+
+    const updatedDocuments =
+      this.recentUploadsSignal()
+        .filter(
+          document =>
+            document.id !== documentId
+        );
+
+    this.recentUploadsSignal.set(
+      updatedDocuments
+    );
+
+    localStorage.setItem(
+      this.storageKey,
+      JSON.stringify(updatedDocuments)
+    );
+  }
+
 
 
   private loadRecentUploads(): DocumentUploadResponse[] {
@@ -128,6 +149,15 @@ export class DocumentService {
       {
         responseType: 'blob'
       }
+    );
+  }
+
+  deleteDocument(
+    documentId: number
+  ): Observable<void> {
+
+    return this.http.delete<void>(
+      `${environment.apiUrl}/documents/${documentId}`
     );
   }
 }

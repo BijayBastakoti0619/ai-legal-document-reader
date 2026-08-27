@@ -228,4 +228,40 @@ export class DashboardComponent {
       'analysis'
     ]);
   }
+
+  deleteDocument(
+    document: DocumentUploadResponse
+  ): void {
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${document.originalFilename}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.documentService
+      .deleteDocument(document.id)
+      .subscribe({
+
+        next: () => {
+
+          this.documentService
+            .removeRecentUpload(document.id);
+        },
+
+        error: error => {
+
+          console.error(
+            'Unable to delete document',
+            error
+          );
+
+          alert(
+            'The document could not be deleted.'
+          );
+        }
+      });
+  }
 }

@@ -1,0 +1,259 @@
+/* =========================
+   Document Card
+   ========================= */
+
+.document-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  padding: 26px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid #e6eaf2;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  overflow: hidden;
+}
+
+.document-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%);
+}
+
+.document-card:hover {
+  transform: translateY(-7px);
+  border-color: #cbc8ff;
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.10), 0 8px 20px rgba(79, 70, 229, 0.10);
+}
+
+/* =========================
+   Card Header
+   ========================= */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.file-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: #fff0ee;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.card-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.document-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  color: #4338ca;
+  background: #eef2ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.status-badge.completed {
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.status-badge.failed {
+  color: #b42318;
+  background: #fef3f2;
+}
+
+/* =========================
+   Card Body
+   ========================= */
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.document-title {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-meta {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #7c8699;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.meta-dot {
+  color: #cbd5e1;
+}
+
+.document-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.document-id-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.secure-label {
+  color: #16835a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================
+   Card Actions
+   ========================= */
+
+.card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.delete-button {
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  color: #dc2626;
+}
+
+.delete-button:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.action-button {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+}
+
+.card-actions .primary-button {
+  border: none;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: white;
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.22);
+}
+
+.card-actions .primary-button:hover {
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.30);
+}
+
+.card-actions .secondary-button {
+  border: 1px solid #d7ddea;
+  background: white;
+  color: #1e293b;
+  box-shadow: none;
+}
+
+.card-actions .secondary-button:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+  background: #f8faff;
+}
+
+/* =========================
+   Analysis Button
+   ========================= */
+
+.analysis-button {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(17, 24, 39, 0.16);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.analysis-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.96;
+  box-shadow: 0 14px 28px rgba(17, 24, 39, 0.22);
+}

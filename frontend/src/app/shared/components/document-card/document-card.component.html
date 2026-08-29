@@ -1,0 +1,36 @@
+<article class="document-card">
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="file-type-badge">PDF</div>
+    <div class="card-badges">
+      <span class="document-type-badge">{{ formatDocumentType(document.documentType) }}</span>
+      <span class="status-badge">{{ document.status }}</span>
+    </div>
+  </div>
+
+  <!-- Card Body -->
+  <div class="card-body">
+    <h3 class="document-title" [title]="document.originalFilename">
+      {{ document.originalFilename }}
+    </h3>
+    <p class="document-meta">
+      <span>{{ formatFileSize(document.fileSize) }}</span>
+      <span class="meta-dot">•</span>
+      <span>{{ document.createdAt | date:'MMM d, y, h:mm a' }}</span>
+    </p>
+    <div class="document-info-row">
+      <div class="document-id-pill">Document #{{ document.id }}</div>
+      <div class="secure-label">✓ Stored securely</div>
+    </div>
+  </div>
+
+  <!-- PDF Actions (Updated to emit events) -->
+  <div class="card-actions">
+    <button type="button" class="action-button primary-button" (click)="view.emit(document)">View PDF</button>
+    <button type="button" class="action-button secondary-button" (click)="download.emit(document)">Download</button>
+    <button type="button" class="action-button delete-button" (click)="delete.emit(document)">Delete</button>
+  </div>
+
+  <!-- Analysis Action (Updated to emit event) -->
+  <button type="button" class="analysis-button" (click)="analyze.emit(document)">View Analysis</button>
+</article>

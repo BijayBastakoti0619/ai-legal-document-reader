@@ -51,7 +51,7 @@ class DocumentRepositoryTest {
         Document doc1 = new Document();
         doc1.setUser(userA);
         doc1.setOriginalFilename("lease.pdf");
-        doc1.setContentType("application/pdf"); // Fix: Explicitly set NOT NULL content_type
+        doc1.setContentType("application/pdf");
         doc1.setFileSize(1024L);
         doc1.setSha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         doc1.setStatus(DocumentStatus.valueOf("UPLOADED"));
@@ -61,7 +61,7 @@ class DocumentRepositoryTest {
         Document doc2 = new Document();
         doc2.setUser(userA);
         doc2.setOriginalFilename("contract.pdf");
-        doc2.setContentType("application/pdf"); // Fix: Explicitly set NOT NULL content_type
+        doc2.setContentType("application/pdf");
         doc2.setFileSize(2048L);
         doc2.setSha256("a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         doc2.setStatus(DocumentStatus.valueOf("COMPLETED"));
@@ -72,16 +72,16 @@ class DocumentRepositoryTest {
         Document doc3 = new Document();
         doc3.setUser(userB);
         doc3.setOriginalFilename("other.pdf");
-        doc3.setContentType("application/pdf"); // Fix: Explicitly set NOT NULL content_type
+        doc3.setContentType("application/pdf");
         doc3.setFileSize(500L);
         doc3.setSha256("b3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         doc3.setStatus(DocumentStatus.valueOf("UPLOADED"));
         doc3.setStorageKey("storage-key-3");
         entityManager.persistAndFlush(doc3);
 
-        // Act: Fetch User A's documents
+        // Act: Fetch User A's documents using the NEW derived query method
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Document> result = documentRepository.findAllByUserIdOrderByCreatedAtDesc(userA.getId(), pageable);
+        Page<Document> result = documentRepository.findAllByUserIdAndStatusNotOrderByCreatedAtDesc(userA.getId(), DocumentStatus.DELETED, pageable);
 
         // Assert: Verify User B's document is excluded
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -103,7 +103,7 @@ class DocumentRepositoryTest {
         Document doc = new Document();
         doc.setUser(user);
         doc.setOriginalFilename("lease.pdf");
-        doc.setContentType("application/pdf"); // Fix: Explicitly set NOT NULL content_type
+        doc.setContentType("application/pdf");
         doc.setFileSize(1024L);
         doc.setSha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         doc.setStatus(DocumentStatus.valueOf("UPLOADED"));

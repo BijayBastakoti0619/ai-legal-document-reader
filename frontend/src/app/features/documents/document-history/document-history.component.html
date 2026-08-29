@@ -1,14 +1,11 @@
 <div class="history-page">
-
   <!-- Decorative background -->
   <div class="background-orb orb-one"></div>
   <div class="background-orb orb-two"></div>
 
   <div class="history-container">
-
     <!-- HEADER -->
     <header class="section-header">
-
       <div class="header-left">
         <a routerLink="/dashboard" class="back-link">
           <span class="back-arrow">←</span>
@@ -17,404 +14,107 @@
       </div>
 
       <div class="header-titles">
-        <span class="section-label">
-          DOCUMENT LIBRARY
-        </span>
-
+        <span class="section-label">DOCUMENT LIBRARY</span>
         <h1>Document History</h1>
-
-        <p>
-          View and manage all your uploaded legal documents.
-        </p>
+        <p>View and manage all your uploaded legal documents.</p>
       </div>
 
       <div class="header-actions">
-
         <div class="select-wrapper">
-          <select
-            class="filter-dropdown"
-            (change)="onFilterChange($event)"
-          >
-            <option value="ALL">
-              All Categories
-            </option>
-
-            <option value="LOAN">
-              Loan
-            </option>
-
-            <option value="LEASE">
-              Lease
-            </option>
-
-            <option value="INSURANCE">
-              Insurance
-            </option>
+          <select class="filter-dropdown" (change)="onFilterChange($event)">
+            <option value="ALL">All Categories</option>
+            <option value="LOAN">Loan</option>
+            <option value="LEASE">Lease</option>
+            <option value="INSURANCE">Insurance</option>
           </select>
         </div>
 
-        <a
-          routerLink="/documents/upload"
-          class="new-upload-button"
-        >
+        <a routerLink="/documents/upload" class="new-upload-button">
           <span class="plus-icon">+</span>
           New Upload
         </a>
-
       </div>
-
     </header>
-
 
     <!-- LOADING -->
     @if (isLoading()) {
-
     <div class="loading-state">
-
       <div class="loading-spinner"></div>
-
       <h3>Loading your documents</h3>
-
-      <p>
-        Fetching your documents securely...
-      </p>
-
+      <p>Fetching your documents securely...</p>
     </div>
-
     }
-
 
     <!-- ERROR -->
     @else if (hasError()) {
-
     <div class="error-state">
-
-      <div class="state-icon error-icon">
-        !
-      </div>
-
-      <h3>
-        We couldn't load your documents
-      </h3>
-
-      <p>
-        Please refresh the page or check your connection.
-      </p>
-
+      <div class="state-icon error-icon">!</div>
+      <h3>We couldn't load your documents</h3>
+      <p>Please refresh the page or check your connection.</p>
     </div>
-
     }
-
 
     <!-- EMPTY -->
     @else if (documents().length === 0) {
-
     <div class="empty-state">
-
-      <div class="empty-icon">
-        📂
-      </div>
-
-      <h3>
-        Your document library is empty
-      </h3>
-
-      <p>
-        Upload your first legal PDF to get started.
-      </p>
-
-      <a
-        routerLink="/documents/upload"
-        class="empty-upload-button"
-      >
-        <span>+</span>
-        Upload your first document
-      </a>
-
+      <div class="empty-icon">📂</div>
+      <h3>Your document library is empty</h3>
+      <p>Upload your first legal PDF to get started.</p>
     </div>
-
     }
-
 
     <!-- DOCUMENTS -->
     @else {
-
     <div class="documents-summary">
-
       <div>
-          <span class="summary-label">
-            YOUR DOCUMENTS
-          </span>
-
-        <span class="summary-count">
-            {{ filteredDocuments().length }}
-          </span>
+        <span class="summary-label">YOUR DOCUMENTS</span>
+        <span class="summary-count">{{ filteredDocuments().length }}</span>
       </div>
-
-      <p>
-        Securely stored and available to you.
-      </p>
-
+      <p>Securely stored and available to you.</p>
     </div>
 
-
+    <!-- Document Cards (Using Shared Component) -->
     <div class="recent-uploads-grid">
+      @for (document of filteredDocuments(); track document.id) {
 
-      @for (
-      document of filteredDocuments();
-      track document.id;
-      let index = $index
-      ) {
-
-      <article
-        class="document-card"
-        [style.--card-index]="index"
-      >
-
-        <!-- TOP ACCENT -->
-        <div class="card-accent"></div>
-
-
-        <!-- CARD HEADER -->
-        <div class="card-header">
-
-          <div class="file-type-badge">
-                <span class="pdf-icon">
-                  PDF
-                </span>
-          </div>
-
-
-          <div class="card-badges">
-
-                <span class="document-type-badge">
-                  {{
-                    formatDocumentType(
-                      document.documentType
-                    )
-                  }}
-                </span>
-
-            <span
-              class="status-badge"
-              [class.completed]="document.status === 'COMPLETED'"
-              [class.failed]="document.status === 'FAILED'"
-              [class.processing]="
-                    document.status === 'EXTRACTING'
-                    ||
-                    document.status === 'ANALYZING'
-                  "
-            >
-                  <span class="status-dot"></span>
-
-                  {{ document.status }}
-                </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- CARD BODY -->
-        <div class="card-body">
-
-          <h3
-            class="document-title"
-            [title]="document.originalFilename"
-          >
-
-            <a
-              [routerLink]="[
-                    '/documents',
-                    document.id
-                  ]"
-            >
-              {{
-              document.originalFilename
-              }}
-            </a>
-
-          </h3>
-
-
-          <div class="document-meta">
-
-                <span class="meta-item">
-                  {{
-                    formatFileSize(
-                      document.fileSize
-                    )
-                  }}
-                </span>
-
-            <span class="meta-dot">
-                  •
-                </span>
-
-            <span class="meta-item">
-                  {{
-                    document.createdAt
-                    |
-                    date:'MMM d, y, h:mm a'
-                  }}
-                </span>
-
-          </div>
-
-
-          <div class="document-divider"></div>
-
-
-          <div class="document-info-row">
-
-            <div class="document-id-pill">
-              #{{ document.id }}
-            </div>
-
-            <div class="secure-label">
-
-                  <span class="secure-check">
-                    ✓
-                  </span>
-
-              Stored securely
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ACTIONS -->
-        <div class="card-actions">
-
-          <button
-            type="button"
-            class="action-button primary-action"
-            (click)="viewDocument(document)"
-          >
-                <span class="button-icon">
-                  👁
-                </span>
-
-            View PDF
-          </button>
-
-
-          <button
-            type="button"
-            class="action-button secondary-action"
-            (click)="downloadDocument(document)"
-          >
-                <span class="button-icon">
-                  ↓
-                </span>
-
-            Download
-          </button>
-
-        </div>
-
-
-        <button
-          type="button"
-          class="analysis-button"
-          (click)="viewAnalysis(document)"
-        >
-
-              <span>
-                View Analysis
-              </span>
-
-          <span class="analysis-arrow">
-                →
-              </span>
-
-        </button>
-
-      </article>
+      <app-document-card
+        [document]="document"
+        (view)="viewDocument($event)"
+        (download)="downloadDocument($event)"
+        (delete)="deleteDocument($event)"
+        (analyze)="viewAnalysis($event)">
+      </app-document-card>
 
       }
-
 
       <!-- FILTER EMPTY STATE -->
-      @if (
-      filteredDocuments().length === 0
-      ) {
-
+      @if (filteredDocuments().length === 0) {
       <div class="filter-empty-state">
-
-        <div class="filter-empty-icon">
-          ◌
-        </div>
-
-        <h3>
-          No matching documents
-        </h3>
-
-        <p>
-          There are no documents in this category on this page.
-        </p>
-
+        <div class="filter-empty-icon">◌</div>
+        <h3>No matching documents</h3>
+        <p>There are no documents in this category on this page.</p>
       </div>
-
       }
-
     </div>
-
 
     <!-- PAGINATION -->
     <div class="pagination-wrapper">
-
       <div class="pagination-controls">
-
-        <button
-          class="page-btn"
-          [disabled]="currentPage() === 0"
-          (click)="previousPage()"
-        >
-          <span>←</span>
-          Previous
+        <button class="page-btn" [disabled]="currentPage() === 0" (click)="previousPage()">
+          <span>←</span> Previous
         </button>
-
 
         <div class="page-indicator">
-
-            <span class="page-label">
-              PAGE
-            </span>
-
-          <strong>
-            {{ currentPage() + 1 }}
-          </strong>
-
-          <span>
-              of {{ totalPages() }}
-            </span>
-
+          <span class="page-label">PAGE</span>
+          <strong>{{ currentPage() + 1 }}</strong>
+          <span>of {{ totalPages() }}</span>
         </div>
 
-
-        <button
-          class="page-btn"
-          [disabled]="
-              currentPage()
-              >=
-              totalPages() - 1
-            "
-          (click)="nextPage()"
-        >
-          Next
-          <span>→</span>
+        <button class="page-btn" [disabled]="currentPage() >= totalPages() - 1" (click)="nextPage()">
+          Next <span>→</span>
         </button>
-
       </div>
-
     </div>
-
     }
-
   </div>
-
 </div>

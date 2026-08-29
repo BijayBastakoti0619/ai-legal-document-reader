@@ -102,9 +102,13 @@ public class DocumentService {
     public Page<DocumentSummaryResponse> getDocuments(Pageable pageable, String authenticatedEmail) {
         User user = userService.getCurrentUser(authenticatedEmail);
 
-        Page<Document> documents = documentRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
+        // FIX: Using the derived query method
+        Page<Document> documents = documentRepository.findAllByUserIdAndStatusNotOrderByCreatedAtDesc(
+                user.getId(),
+                DocumentStatus.DELETED,
+                pageable
+        );
 
-        // Map the Entity to the immutable Record DTO
         return documents.map(doc -> new DocumentSummaryResponse(
                 doc.getId(),
                 doc.getOriginalFilename(),
@@ -118,10 +122,8 @@ public class DocumentService {
         User user = userService.getCurrentUser(authenticatedEmail);
 
         Document doc = documentRepository.findByIdAndUserId(id, user.getId())
-                // FIX: Now throwing a 404 exception instead of a 500 RuntimeException
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
-        // Map the Entity to the immutable Record DTO
         return new DocumentDetailResponse(
                 doc.getId(),
                 doc.getOriginalFilename(),
@@ -184,19 +186,9 @@ public class DocumentService {
                                 )
                         );
 
-        /*
-         * Security check:
-         * the authenticated user must own the document.
-         */
         if (!document.getUser()
                 .getId()
                 .equals(authenticatedUser.getId())) {
-
-            /*
-             * We intentionally say "not found"
-             * instead of revealing that another
-             * user's document exists.
-             */
             throw new DocumentNotFoundException(
                     "Document not found."
             );

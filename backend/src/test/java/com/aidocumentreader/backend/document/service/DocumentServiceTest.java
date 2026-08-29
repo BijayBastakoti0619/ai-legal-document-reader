@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -66,10 +67,11 @@ class DocumentServiceTest {
         doc.setContentType("application/pdf");
         doc.setFileSize(5000L);
         doc.setStatus(DocumentStatus.UPLOADED);
-        // Note: createdAt is intentionally omitted as the entity handles it automatically
 
         Page<Document> mockPage = new PageImpl<>(List.of(doc), pageable, 1);
-        when(documentRepository.findAllByUserIdOrderByCreatedAtDesc(eq(1L), eq(pageable)))
+
+        // FIX: Stub the derived query method call
+        when(documentRepository.findAllByUserIdAndStatusNotOrderByCreatedAtDesc(eq(1L), eq(DocumentStatus.DELETED), eq(pageable)))
                 .thenReturn(mockPage);
 
         // Act

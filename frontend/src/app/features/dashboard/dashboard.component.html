@@ -1,385 +1,118 @@
 <div class="dashboard">
 
   <!-- Top Navigation -->
-
   <header class="navbar">
-
     <div class="brand">
-
-      <div class="brand-icon">
-        AI
-      </div>
-
+      <div class="brand-icon">AI</div>
       <div>
         <h2>Legal AI</h2>
         <span>Document Reader</span>
       </div>
-
     </div>
-
 
     <div class="nav-actions">
-
-      <a
-        routerLink="/documents/upload"
-        class="upload-nav-button"
-      >
-        + Upload PDF
-      </a>
-
-      <button
-        type="button"
-        class="logout-button"
-        (click)="onLogout()"
-      >
-        Log Out
-      </button>
-
+      <a routerLink="/documents/upload" class="upload-nav-button">+ Upload PDF</a>
+      <button type="button" class="logout-button" (click)="onLogout()">Log Out</button>
     </div>
-
   </header>
-
 
   <main class="dashboard-content">
 
     <!-- Hero -->
-
     <section class="hero">
-
       <div class="hero-content">
-
-        <span class="hero-badge">
-          AI Legal Document Reader
-        </span>
-
+        <span class="hero-badge">AI Legal Document Reader</span>
         <h1>
           Understand legal documents
           <span>faster.</span>
         </h1>
-
         <p>
           Upload your legal PDFs and prepare them
           for AI-powered analysis and summarization.
         </p>
 
-
         <div class="hero-actions">
-
           <!-- FIX: Button 1 now goes to the real Document History page -->
-          <a
-            routerLink="/documents/history"
-            class="primary-button"
-          >
-            View Uploads
-          </a>
-
+          <a routerLink="/documents/history" class="primary-button">View Uploads</a>
           <!-- FIX: Button 2 is the dummy Analysis route -->
-          <a
-            routerLink="/analysis/history"
-            class="secondary-button"
-          >
-            View Analysis
-          </a>
-
+          <a routerLink="/analysis/history" class="secondary-button">View Analysis</a>
         </div>
-
       </div>
 
-
       <div class="hero-visual">
-
         <div class="floating-document">
-
-          <div class="pdf-icon">
-            PDF
-          </div>
-
+          <div class="pdf-icon">PDF</div>
           <div class="document-lines">
             <span></span>
             <span></span>
             <span></span>
             <span></span>
           </div>
-
-          <div class="ai-badge">
-            ✨ AI Ready
-          </div>
-
+          <div class="ai-badge">✨ AI Ready</div>
         </div>
-
       </div>
-
     </section>
-
 
     <!-- Statistics -->
-
     <section class="stats">
-
       <div class="stat-card">
-
-        <div class="stat-icon">
-          📄
-        </div>
-
+        <div class="stat-icon">📄</div>
         <div>
-
-          <span class="stat-value">
-            {{ recentUploads().length }}
-          </span>
-
-          <span class="stat-label">
-            Recent Uploads
-          </span>
-
+          <span class="stat-value">{{ recentUploads().length }}</span>
+          <span class="stat-label">Recent Uploads</span>
         </div>
-
       </div>
 
-
       <div class="stat-card">
-
-        <div class="stat-icon">
-          🔐
-        </div>
-
+        <div class="stat-icon">🔐</div>
         <div>
-
-          <span class="stat-value">
-            Secure
-          </span>
-
-          <span class="stat-label">
-            Private Storage
-          </span>
-
+          <span class="stat-value">Secure</span>
+          <span class="stat-label">Private Storage</span>
         </div>
-
       </div>
 
-
       <div class="stat-card">
-
-        <div class="stat-icon">
-          🤖
-        </div>
-
+        <div class="stat-icon">🤖</div>
         <div>
-
-          <span class="stat-value">
-            AI
-          </span>
-
-          <span class="stat-label">
-            Analysis Ready
-          </span>
-
+          <span class="stat-value">AI</span>
+          <span class="stat-label">Analysis Ready</span>
         </div>
-
       </div>
-
     </section>
-
 
     <!-- Recent Uploads -->
-
-    <section
-      id="recent-uploads"
-      class="uploads-section"
-    >
-
+    <section id="recent-uploads" class="uploads-section">
       <div class="section-header">
-
         <div>
-
-          <span class="section-label">
-            DOCUMENTS
-          </span>
-
-          <h2>
-            Recent Uploads
-          </h2>
-
-          <p>
-            PDFs you recently uploaded.
-          </p>
-
+          <span class="section-label">DOCUMENTS</span>
+          <h2>Recent Uploads</h2>
+          <p>PDFs you recently uploaded.</p>
         </div>
-
       </div>
-
 
       @if (recentUploads().length === 0) {
-
       <!-- Empty State -->
-
       <div class="empty-state">
-
-        <div class="empty-icon">
-          📂
-        </div>
-
-        <h3>
-          No documents uploaded yet
-        </h3>
-
-        <p>
-          Upload your first PDF to get started.
-        </p>
-
-        <a
-          routerLink="/documents/upload"
-          class="primary-button"
-        >
-          Upload your first document
-        </a>
-
+        <div class="empty-icon">📂</div>
+        <h3>No documents uploaded yet</h3>
+        <p>Upload your first PDF to get started.</p>
+        <a routerLink="/documents/upload" class="primary-button">Upload your first document</a>
       </div>
-
       } @else {
 
-      <!-- Document Cards -->
-
+      <!-- Document Cards (Using Shared Component) -->
       <div class="recent-uploads-grid">
-
-        @for (
-        document of recentUploads();
-        track document.id
-        ) {
-
-        <article class="document-card">
-
-          <!-- Card Header -->
-
-          <div class="card-header">
-
-            <div class="file-type-badge">
-              PDF
-            </div>
-
-
-            <div class="card-badges">
-
-                  <span class="document-type-badge">
-                    {{
-                      formatDocumentType(
-                        document.documentType
-                      )
-                    }}
-                  </span>
-
-              <span class="status-badge">
-                    {{ document.status }}
-                  </span>
-
-            </div>
-
-          </div>
-
-
-          <!-- Card Body -->
-
-          <div class="card-body">
-
-            <h3
-              class="document-title"
-              [title]="document.originalFilename"
-            >
-              {{ document.originalFilename }}
-            </h3>
-
-
-            <p class="document-meta">
-
-                  <span>
-                    {{
-                      formatFileSize(
-                        document.fileSize
-                      )
-                    }}
-                  </span>
-
-              <span class="meta-dot">
-                    •
-                  </span>
-
-              <span>
-                    {{
-                      document.createdAt
-                        | date:'MMM d, y, h:mm a'
-                    }}
-                  </span>
-
-            </p>
-
-
-            <div class="document-info-row">
-
-              <div class="document-id-pill">
-                Document #{{ document.id }}
-              </div>
-
-              <div class="secure-label">
-                ✓ Stored securely
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- PDF Actions -->
-
-          <div class="card-actions">
-
-            <button
-              type="button"
-              class="action-button primary-button"
-              (click)="viewDocument(document)"
-            >
-              View PDF
-            </button>
-
-
-            <button
-              type="button"
-              class="action-button secondary-button"
-              (click)="downloadDocument(document)"
-            >
-              Download
-            </button>
-
-            <button
-              type="button"
-              class="action-button delete-button"
-              (click)="deleteDocument(document)"
-            >
-              Delete
-            </button>
-
-          </div>
-
-
-          <!-- Analysis Action -->
-
-          <button
-            type="button"
-            class="analysis-button"
-            (click)="viewAnalysis(document)"
-          >
-            View Analysis
-          </button>
-
-        </article>
-
+        @for (document of recentUploads(); track document.id) {
+        <app-document-card
+          [document]="document"
+          (view)="viewDocument($event)"
+          (download)="downloadDocument($event)"
+          (delete)="deleteDocument($event)"
+          (analyze)="viewAnalysis($event)">
+        </app-document-card>
         }
-
       </div>
-
       }
-
     </section>
-
   </main>
-
 </div>

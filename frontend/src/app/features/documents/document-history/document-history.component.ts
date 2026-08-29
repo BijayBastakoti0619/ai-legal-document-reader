@@ -1,12 +1,12 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { DocumentService } from '../../../core/services/document.service';
+import { DocumentCardComponent } from '../../../shared/components/document-card/document-card.component';
 
 @Component({
   selector: 'app-document-history',
   standalone: true,
-  imports: [DatePipe, RouterLink],
+  imports: [RouterLink, DocumentCardComponent],
   templateUrl: './document-history.component.html',
   styleUrl: './document-history.component.css'
 })
@@ -16,22 +16,17 @@ export class DocumentHistoryComponent implements OnInit {
 
   isLoading = signal(true);
   hasError = signal(false);
-  documents = signal<any[]>([]);
 
-  // --- NEW: Filter State & Computed Signal ---
+  documents = signal<any[]>([]);
   selectedFilter = signal<string>('ALL');
 
   filteredDocuments = computed(() => {
     const docs = this.documents();
     const filter = this.selectedFilter();
-
-    if (filter === 'ALL') {
-      return docs;
-    }
+    if (filter === 'ALL') return docs;
     return docs.filter(doc => doc.documentType === filter);
   });
 
-  // Pagination State
   currentPage = signal(0);
   totalPages = signal(1);
 
@@ -39,10 +34,10 @@ export class DocumentHistoryComponent implements OnInit {
     this.loadDocuments(this.currentPage());
   }
 
-private loadDocuments(page: number): void {
+  private loadDocuments(page: number): void {
     this.isLoading.set(true);
-    // FIX: Changed from 6 to 3 so it creates exactly 1 row of cards!
-    this.documentService.getDocuments(page, 3).subscribe({
+    // Fetch exactly 2 items per page directly from our newly updated backend
+    this.documentService.getDocuments(page, 2).subscribe({
       next: (response) => {
         this.documents.set(response.content);
         this.totalPages.set(response.page?.totalPages || 1);
@@ -57,13 +52,11 @@ private loadDocuments(page: number): void {
     });
   }
 
-  // --- NEW: Filter Handler ---
   onFilterChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedFilter.set(value);
   }
 
-  // Pagination Methods
   nextPage(): void {
     if (this.currentPage() < this.totalPages() - 1) {
       this.loadDocuments(this.currentPage() + 1);
@@ -73,22 +66,6 @@ private loadDocuments(page: number): void {
   previousPage(): void {
     if (this.currentPage() > 0) {
       this.loadDocuments(this.currentPage() - 1);
-    }
-  }
-
-  // Helper Methods
-  formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} bytes`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  }
-
-  formatDocumentType(type: string | undefined): string {
-    switch (type) {
-      case 'LEASE': return 'Lease';
-      case 'INSURANCE': return 'Insurance';
-      case 'LOAN': return 'Loan';
-      default: return 'Loan';
     }
   }
 
@@ -131,5 +108,25 @@ private loadDocuments(page: number): void {
 
   viewAnalysis(document: any): void {
     this.router.navigate(['/documents', document.id, 'analysis']);
+  }
+
+  deleteDocument(document: any): void {
+    const confirmed = window.confirm(`Are you sure you want to delete "${document.originalFilename}"?`);
+    if (!confirmed) return;
+
+    this.documentService.deleteDocument(document.id).subscribe({
+      next: () => {
+        // Safety: If deleting the last item on a page, bounce back one page
+        if (this.documents().length === 1 && this.currentPage() > 0) {
+          this.currentPage.update(p => p - 1);
+        }
+        // Force the backend to fetch fresh data so the next item slides into the empty grid slot
+        this.loadDocuments(this.currentPage());
+      },
+      error: error => {
+        console.error('Unable to delete document', error);
+        alert('The document could not be deleted.');
+      }
+    });
   }
 }

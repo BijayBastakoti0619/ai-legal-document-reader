@@ -7,6 +7,7 @@ public record DocumentDetailResponse(
         String originalFilename,
         String contentType,
         Long fileSize,
+        String documentType,
         String status,
         Instant createdAt,
         Instant updatedAt

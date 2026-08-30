@@ -113,6 +113,7 @@ public class DocumentService {
                 doc.getId(),
                 doc.getOriginalFilename(),
                 doc.getFileSize(),
+                doc.getDocumentType().name(),
                 doc.getStatus().name(),
                 doc.getCreatedAt()
         ));
@@ -121,7 +122,8 @@ public class DocumentService {
     public DocumentDetailResponse getDocument(Long id, String authenticatedEmail) {
         User user = userService.getCurrentUser(authenticatedEmail);
 
-        Document doc = documentRepository.findByIdAndUserId(id, user.getId())
+        // FIX: Ensure we call the updated repository method and pass the DELETED status
+        Document doc = documentRepository.findByIdAndUserIdAndStatusNot(id, user.getId(), DocumentStatus.DELETED)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         return new DocumentDetailResponse(
@@ -129,7 +131,8 @@ public class DocumentService {
                 doc.getOriginalFilename(),
                 doc.getContentType(),
                 doc.getFileSize(),
-                doc.getStatus().name(),
+                doc.getDocumentType().name(), // FIX: Moved documentType to its correct position
+                doc.getStatus().name(),       // FIX: Moved status to its correct position
                 doc.getCreatedAt(),
                 doc.getUpdatedAt()
         );

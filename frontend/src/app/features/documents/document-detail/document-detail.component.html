@@ -1,8 +1,8 @@
 <!-- src/app/features/documents/document-detail/document-detail.component.html -->
 <div class="detail-container">
   <div class="breadcrumb">
-    <!-- Ensure the routerLink attribute explicitly says "/documents" -->
-    <a routerLink="/documents/history" class="back-link">&larr; Back to History</a>
+    <!-- FIX: Replaced hardcoded routerLink with dynamic goBack() -->
+    <a (click)="goBack()" class="back-link" style="cursor: pointer;">&larr; Go Back</a>
   </div>
 
   @if (isLoading()) {

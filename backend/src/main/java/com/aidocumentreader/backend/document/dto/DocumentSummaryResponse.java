@@ -6,6 +6,7 @@ public record DocumentSummaryResponse(
         Long id,
         String originalFilename,
         Long fileSize,
+        String documentType,
         String status,
         Instant createdAt
 ) {}

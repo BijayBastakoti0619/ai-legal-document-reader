@@ -1,6 +1,7 @@
 package com.aidocumentreader.backend.document.controller;
 
 import com.aidocumentreader.backend.document.dto.DocumentContent;
+import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.dto.DocumentUploadResponse;
 import com.aidocumentreader.backend.document.entity.Document;
@@ -105,6 +106,18 @@ public class DocumentController {
 
         // Pass the pagination request and the secure email from the JWT
         return documentService.getDocuments(pageable, principal.getName());
+    }
+
+    // FIX: Added the missing metadata endpoint required by the roadmap
+    @GetMapping("/{documentId}")
+    public DocumentDetailResponse getDocumentDetails(
+            @PathVariable Long documentId,
+            Principal principal
+    ) {
+        return documentService.getDocument(
+                documentId,
+                principal.getName()
+        );
     }
 
     @DeleteMapping("/{documentId}")

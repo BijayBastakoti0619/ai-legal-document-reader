@@ -48,9 +48,9 @@ class DocumentControllerTest {
 
     @Test
     void shouldReturnPaginatedDocuments() throws Exception {
-        // Arrange
+        // Arrange: Added the missing "LEASE" documentType to the constructor
         DocumentSummaryResponse summary = new DocumentSummaryResponse(
-                15L, "lease.pdf", 1024L, "UPLOADED", Instant.now()
+                15L, "lease.pdf", 1024L, "LEASE", "UPLOADED", Instant.now()
         );
 
         when(documentService.getDocuments(any(Pageable.class), eq("user@example.com")))
@@ -63,14 +63,15 @@ class DocumentControllerTest {
                         .principal(mockPrincipal))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(15))
-                .andExpect(jsonPath("$.content[0].originalFilename").value("lease.pdf"));
+                .andExpect(jsonPath("$.content[0].originalFilename").value("lease.pdf"))
+                .andExpect(jsonPath("$.content[0].documentType").value("LEASE")); // FIX: Verify category in JSON
     }
 
     @Test
     void shouldReturnDocumentDetail() throws Exception {
-        // Arrange
+        // Arrange: Added the missing "LEASE" documentType to the constructor
         DocumentDetailResponse detail = new DocumentDetailResponse(
-                15L, "lease.pdf", "application/pdf", 1024L, "UPLOADED", Instant.now(), Instant.now()
+                15L, "lease.pdf", "application/pdf", 1024L, "LEASE", "UPLOADED", Instant.now(), Instant.now()
         );
 
         when(documentService.getDocument(15L, "user@example.com")).thenReturn(detail);
@@ -80,6 +81,7 @@ class DocumentControllerTest {
                         .principal(mockPrincipal))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(15))
-                .andExpect(jsonPath("$.originalFilename").value("lease.pdf"));
+                .andExpect(jsonPath("$.originalFilename").value("lease.pdf"))
+                .andExpect(jsonPath("$.documentType").value("LEASE")); // FIX: Verify category in JSON
     }
 }

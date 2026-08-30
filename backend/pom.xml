@@ -39,6 +39,14 @@
 			<artifactId>s3</artifactId>
 		</dependency>
 
+        <!-- OpenAPI 3 / Swagger UI for Spring Boot 3 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+
         <dependency>
             <groupId>me.paulschwarz</groupId>
             <artifactId>springboot3-dotenv</artifactId>

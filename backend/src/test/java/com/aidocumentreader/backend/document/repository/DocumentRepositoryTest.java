@@ -90,8 +90,9 @@ class DocumentRepositoryTest {
                 .containsExactlyInAnyOrder("contract.pdf", "lease.pdf");
     }
 
+    // FIX: Updated method name and added DocumentStatus to assertions
     @Test
-    void shouldFindByIdAndUserId() {
+    void shouldFindByIdAndUserIdAndStatusNot() {
         // Arrange
         User user = new User();
         user.setEmail("owner@example.com");
@@ -111,14 +112,14 @@ class DocumentRepositoryTest {
         doc = entityManager.persistAndFlush(doc);
 
         // Act - successful find
-        Optional<Document> found = documentRepository.findByIdAndUserId(doc.getId(), user.getId());
+        Optional<Document> found = documentRepository.findByIdAndUserIdAndStatusNot(doc.getId(), user.getId(), DocumentStatus.DELETED);
 
         // Assert
         assertThat(found).isPresent();
         assertThat(found.get().getOriginalFilename()).isEqualTo("lease.pdf");
 
         // Act - unauthorized find
-        Optional<Document> notFound = documentRepository.findByIdAndUserId(doc.getId(), 999L);
+        Optional<Document> notFound = documentRepository.findByIdAndUserIdAndStatusNot(doc.getId(), 999L, DocumentStatus.DELETED);
 
         // Assert
         assertThat(notFound).isEmpty();

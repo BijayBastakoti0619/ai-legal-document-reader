@@ -13,6 +13,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     // INDUSTRY STANDARD: Derived query method automatically filters out the provided status
     Page<Document> findAllByUserIdAndStatusNotOrderByCreatedAtDesc(Long userId, DocumentStatus status, Pageable pageable);
 
-    // For the details page - ensures the document belongs to the requesting user
-    Optional<Document> findByIdAndUserId(Long id, Long userId);
+    // FIX: Added 'AndStatusNot' to match the parameter and ensure deleted documents return a 404
+    Optional<Document> findByIdAndUserIdAndStatusNot(Long id, Long userId, DocumentStatus status);
 }

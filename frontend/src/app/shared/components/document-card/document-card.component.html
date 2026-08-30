@@ -11,7 +11,9 @@
   <!-- Card Body -->
   <div class="card-body">
     <h3 class="document-title" [title]="document.originalFilename">
-      {{ document.originalFilename }}
+      <a [routerLink]="['/documents', document.id]" class="title-link">
+        {{ document.originalFilename }}
+      </a>
     </h3>
     <p class="document-meta">
       <span>{{ formatFileSize(document.fileSize) }}</span>

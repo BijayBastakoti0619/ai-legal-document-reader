@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { DocumentType, DocumentUploadResponse } from '../../models/document.models';
 
 @Component({
   selector: 'app-document-card',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './document-card.component.html',
   styleUrl: './document-card.component.css'
 })

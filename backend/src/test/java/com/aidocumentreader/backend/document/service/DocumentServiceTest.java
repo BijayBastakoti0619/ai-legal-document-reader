@@ -4,6 +4,7 @@ import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
+import com.aidocumentreader.backend.document.entity.DocumentType; // FIX: Added import
 import com.aidocumentreader.backend.document.repository.DocumentRepository;
 import com.aidocumentreader.backend.document.validation.PdfValidationService;
 import com.aidocumentreader.backend.storage.service.B2StorageService;
@@ -67,6 +68,7 @@ class DocumentServiceTest {
         doc.setContentType("application/pdf");
         doc.setFileSize(5000L);
         doc.setStatus(DocumentStatus.UPLOADED);
+        doc.setDocumentType(DocumentType.valueOf("LEASE")); // FIX: Add document type to prevent NPE during mapping
 
         Page<Document> mockPage = new PageImpl<>(List.of(doc), pageable, 1);
 
@@ -100,8 +102,10 @@ class DocumentServiceTest {
         doc.setContentType("application/pdf");
         doc.setFileSize(1024L);
         doc.setStatus(DocumentStatus.UPLOADED);
+        doc.setDocumentType(DocumentType.valueOf("LEASE")); // FIX: Add document type to prevent NPE during mapping
 
-        when(documentRepository.findByIdAndUserId(documentId, 5L)).thenReturn(Optional.of(doc));
+        // FIX: Updated mock call to include the DELETED status parameter
+        when(documentRepository.findByIdAndUserIdAndStatusNot(documentId, 5L, DocumentStatus.DELETED)).thenReturn(Optional.of(doc));
 
         // Act
         DocumentDetailResponse result = documentService.getDocument(documentId, email);
@@ -123,8 +127,8 @@ class DocumentServiceTest {
         when(userService.getCurrentUser(email)).thenReturn(user);
 
         Long documentId = 15L;
-        // The repository will return empty because the ID and User ID don't match
-        when(documentRepository.findByIdAndUserId(documentId, 99L)).thenReturn(Optional.empty());
+        // FIX: Updated mock call to include the DELETED status parameter
+        when(documentRepository.findByIdAndUserIdAndStatusNot(documentId, 99L, DocumentStatus.DELETED)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> documentService.getDocument(documentId, email))

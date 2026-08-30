@@ -1,29 +1,79 @@
 <!-- src/app/features/documents/document-detail/document-detail.component.html -->
+
 <div class="detail-container">
+
   <div class="breadcrumb">
-    <!-- FIX: Replaced hardcoded routerLink with dynamic goBack() -->
-    <a (click)="goBack()" class="back-link" style="cursor: pointer;">&larr; Go Back</a>
+    <a
+      (click)="goBack()"
+      class="back-link"
+      style="cursor: pointer;"
+    >
+      &larr; Go Back
+    </a>
   </div>
 
   @if (isLoading()) {
   <div class="loading-state">
+
+    <div class="spinner"></div>
+
     <p>Loading document details...</p>
+
   </div>
+
   } @else if (hasError()) {
+
   <div class="error-state">
-    <h3>Document Not Found</h3>
-    <p>This document doesn't exist, or you do not have permission to view it.</p>
+
+    <h3>Unable to Load Document</h3>
+
+    <p>
+      {{ errorMessage() }}
+    </p>
+
+    <button
+      type="button"
+      class="back-button"
+      (click)="goBack()"
+    >
+      Go Back
+    </button>
+
   </div>
+
   } @else if (document()) {
+
   <div class="document-header">
-    <h2>{{ document()?.originalFilename }}</h2>
-    <span class="status-badge">{{ document()?.status }}</span>
+
+    <h2>
+      {{ document()?.originalFilename }}
+    </h2>
+
+    <span class="status-badge">
+        {{ document()?.status }}
+      </span>
+
   </div>
 
   <div class="metadata-card">
-    <p><strong>File Size:</strong> {{ document()?.fileSize }} bytes</p>
-    <p><strong>Uploaded:</strong> {{ document()?.createdAt | date:'medium' }}</p>
-    <p><strong>Content Type:</strong> {{ document()?.contentType }}</p>
+
+    <p>
+      <strong>File Size:</strong>
+      {{ document()?.fileSize }} bytes
+    </p>
+
+    <p>
+      <strong>Uploaded:</strong>
+      {{ document()?.createdAt | date:'medium' }}
+    </p>
+
+    <p>
+      <strong>Content Type:</strong>
+      {{ document()?.contentType }}
+    </p>
+
   </div>
+
   }
+
 </div>

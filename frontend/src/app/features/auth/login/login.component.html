@@ -1,9 +1,24 @@
 <div class="login-wrapper">
   <div class="login-card">
 
+    <!-- Registration success -->
     @if (registrationSuccess) {
     <div class="success-message">
       Account created successfully. Please log in.
+    </div>
+    }
+
+    <!-- Login error -->
+    @if (errorMessage()) {
+    <div class="error-message">
+      <span>{{ errorMessage() }}</span>
+
+      <button
+        type="button"
+        class="close-error"
+        (click)="clearError()">
+        ×
+      </button>
     </div>
     }
 
@@ -12,46 +27,106 @@
       <p>Sign in to your AI Legal Document Reader</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="onSubmit()"
+    >
 
+      <!-- Email -->
       <div class="form-group">
-        <label for="email">Email Address</label>
+
+        <label for="email">
+          Email Address
+        </label>
+
         <input
           type="email"
           id="email"
           formControlName="email"
           placeholder="name@example.com"
-          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          [class.is-invalid]="
+            loginForm.get('email')?.invalid &&
+            loginForm.get('email')?.touched
+          "
         >
 
-        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-        <span class="error-text">Please enter a valid email address.</span>
+        @if (
+        loginForm.get('email')?.invalid &&
+        loginForm.get('email')?.touched
+        ) {
+        <span class="error-text">
+            Please enter a valid email address.
+          </span>
         }
+
       </div>
 
+
+      <!-- Password -->
       <div class="form-group">
-        <label for="password">Password</label>
+
+        <label for="password">
+          Password
+        </label>
+
         <input
           type="password"
           id="password"
           formControlName="password"
           placeholder="••••••••"
-          [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          [class.is-invalid]="
+            loginForm.get('password')?.invalid &&
+            loginForm.get('password')?.touched
+          "
         >
 
-        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-        <span class="error-text">Password is required.</span>
+        @if (
+        loginForm.get('password')?.invalid &&
+        loginForm.get('password')?.touched
+        ) {
+        <span class="error-text">
+            Password is required.
+          </span>
         }
+
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid">
+
+      <!-- Progress bar -->
+      @if (isSubmitting()) {
+      <div class="progress-container">
+        <div class="progress-bar"></div>
+      </div>
+      }
+
+
+      <!-- Sign In button -->
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="loginForm.invalid || isSubmitting()"
+      >
+
+        @if (isSubmitting()) {
+        Signing In...
+        } @else {
         Sign In
+        }
+
       </button>
 
-      <p class="register-prompt" style="text-align: center; margin-top: 15px;">
-        Don't have an account? <a routerLink="/register">Register</a>
+
+      <p
+        class="register-prompt"
+        style="text-align: center; margin-top: 15px;"
+      >
+        Don't have an account?
+        <a routerLink="/register">
+          Register
+        </a>
       </p>
 
     </form>
+
   </div>
 </div>

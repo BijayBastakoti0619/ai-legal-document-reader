@@ -105,6 +105,7 @@
         @for (document of recentUploads(); track document.id) {
         <app-document-card
           [document]="document"
+          [isDeleting]="deletingDocumentId() === document.id"
           (view)="viewDocument($event)"
           (download)="downloadDocument($event)"
           (delete)="deleteDocument($event)"

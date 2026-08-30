@@ -14,6 +14,9 @@ export class DocumentCardComponent {
   // Receives the document data from the parent
   @Input({ required: true }) document!: DocumentUploadResponse;
 
+  // Receives deleting state from DashboardComponent
+  @Input()
+  isDeleting = false;
   // Emits events up to the parent when a button is clicked
   @Output() view = new EventEmitter<DocumentUploadResponse>();
   @Output() download = new EventEmitter<DocumentUploadResponse>();

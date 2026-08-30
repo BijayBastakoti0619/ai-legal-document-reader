@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,6 +17,40 @@ import java.util.UUID;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /*
+     * Login failure
+     *
+     * Handles:
+     * - Wrong email
+     * - Wrong password
+     *
+     * We intentionally return the same message for both cases
+     * so we don't reveal whether an email exists.
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+            BadCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "INVALID_CREDENTIALS",
+                "Invalid email or password.",
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
+
+    /*
+     * Registration - duplicate email
+     */
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ApiErrorResponse> handleEmailAlreadyExists(
             EmailAlreadyExistsException exception,
@@ -31,9 +66,15 @@ public class GlobalExceptionHandler {
                 List.of()
         );
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
     }
 
+
+    /*
+     * DTO / request validation errors
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException exception,
@@ -59,29 +100,15 @@ public class GlobalExceptionHandler {
                 fieldErrors
         );
 
-        return ResponseEntity.badRequest().body(response);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
-            Exception exception,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "INTERNAL_SERVER_ERROR",
-                "An unexpected error occurred.",
-                request.getRequestURI(),
-                correlationId(),
-                List.of()
-        );
-
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .badRequest()
                 .body(response);
     }
 
+
+    /*
+     * Document validation errors
+     */
     @ExceptionHandler(DocumentValidationException.class)
     public ResponseEntity<ApiErrorResponse> handleDocumentValidation(
             DocumentValidationException exception,
@@ -102,6 +129,10 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+
+    /*
+     * File too large
+     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
             MaxUploadSizeExceededException exception,
@@ -122,6 +153,10 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+
+    /*
+     * Document upload failure
+     */
     @ExceptionHandler(DocumentUploadException.class)
     public ResponseEntity<ApiErrorResponse> handleDocumentUpload(
             DocumentUploadException exception,
@@ -142,6 +177,10 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+
+    /*
+     * Document not found
+     */
     @ExceptionHandler(DocumentNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleDocumentNotFound(
             DocumentNotFoundException exception,
@@ -162,6 +201,37 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+
+    /*
+     * Catch-all handler.
+     *
+     * Keep this as the final fallback for unexpected errors.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "INTERNAL_SERVER_ERROR",
+                "An unexpected error occurred.",
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
+
+    /*
+     * Get correlation ID from MDC.
+     * Generate one if none exists.
+     */
     private String correlationId() {
         String existingId = MDC.get("correlationId");
 

@@ -21,6 +21,9 @@
   z-index: 2;
   width: min(1380px, 100%);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 80px);
 }
 
 /* =========================================================
@@ -398,7 +401,7 @@
 .pagination-wrapper {
   display: flex;
   justify-content: center;
-  margin-top: 42px;
+  margin-top: auto;
 }
 
 .pagination-controls {

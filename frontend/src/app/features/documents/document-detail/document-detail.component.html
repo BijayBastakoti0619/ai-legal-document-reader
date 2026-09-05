@@ -14,64 +14,51 @@
 
   @if (isLoading()) {
   <div class="loading-state">
-
     <div class="spinner"></div>
-
     <p>Loading document details...</p>
-
   </div>
-
   } @else if (hasError()) {
-
   <div class="error-state">
-
     <h3>Unable to Load Document</h3>
-
-    <p>
-      {{ errorMessage() }}
-    </p>
-
-    <button
-      type="button"
-      class="back-button"
-      (click)="goBack()"
-    >
-      Go Back
-    </button>
-
+    <p>{{ errorMessage() }}</p>
+    <button type="button" class="back-button" (click)="goBack()">Go Back</button>
   </div>
-
   } @else if (document()) {
 
   <div class="document-header">
+    <h2>{{ document()?.originalFilename }}</h2>
+    <span class="status-badge">{{ document()?.status }}</span>
+  </div>
 
-    <h2>
-      {{ document()?.originalFilename }}
-    </h2>
-
-    <span class="status-badge">
-        {{ document()?.status }}
-      </span>
-
+  <!-- FIX: New Dynamic Processing State Banner -->
+  <div class="processing-banner" [class]="document()?.status?.toLowerCase()">
+    @switch (document()?.status) {
+    @case ('UPLOADED') {
+    <p>Document uploaded. Waiting for processing...</p>
+    }
+    @case ('EXTRACTING') {
+    <p>Reading your document...</p>
+    }
+    @case ('ANALYZING') {
+    <p>Analyzing document...</p>
+    }
+    @case ('COMPLETED') {
+    <p>Analysis complete.</p>
+    }
+    @case ('FAILED') {
+    <p>We couldn't process this document.</p>
+    <!-- Render Developer 1's safe failure message if it exists -->
+    @if (failureMessage()) {
+    <p class="failure-reason">{{ failureMessage() }}</p>
+    }
+    }
+    }
   </div>
 
   <div class="metadata-card">
-
-    <p>
-      <strong>File Size:</strong>
-      {{ document()?.fileSize }} bytes
-    </p>
-
-    <p>
-      <strong>Uploaded:</strong>
-      {{ document()?.createdAt | date:'medium' }}
-    </p>
-
-    <p>
-      <strong>Content Type:</strong>
-      {{ document()?.contentType }}
-    </p>
-
+    <p><strong>File Size:</strong> {{ document()?.fileSize }} bytes</p>
+    <p><strong>Uploaded:</strong> {{ document()?.createdAt | date:'medium' }}</p>
+    <p><strong>Content Type:</strong> {{ document()?.contentType }}</p>
   </div>
 
   }

@@ -3,6 +3,7 @@ package com.aidocumentreader.backend.document.controller;
 import com.aidocumentreader.backend.auth.jwttoken.JwtAuthenticationFilter;
 import com.aidocumentreader.backend.auth.service.CustomUserDetailsService;
 import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
+import com.aidocumentreader.backend.document.dto.DocumentStatusResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.service.DocumentService;
 import org.junit.jupiter.api.Test;
@@ -83,5 +84,24 @@ class DocumentControllerTest {
                 .andExpect(jsonPath("$.id").value(15))
                 .andExpect(jsonPath("$.originalFilename").value("lease.pdf"))
                 .andExpect(jsonPath("$.documentType").value("LEASE")); // FIX: Verify category in JSON
+    }
+
+    @Test
+    void shouldReturnDocumentStatus() throws Exception {
+        // Arrange
+        DocumentStatusResponse statusResponse = new DocumentStatusResponse(
+                15L, "EXTRACTING", null, null
+        );
+
+        when(documentService.getDocumentStatus(15L, "user@example.com")).thenReturn(statusResponse);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/documents/15/status")
+                        .principal(mockPrincipal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documentId").value(15))
+                .andExpect(jsonPath("$.status").value("EXTRACTING"))
+                .andExpect(jsonPath("$.failureCode").isEmpty())
+                .andExpect(jsonPath("$.message").isEmpty());
     }
 }

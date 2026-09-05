@@ -54,3 +54,11 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// NEW: Added the new status polling response model
+export interface DocumentStatusResponse {
+  documentId: number;
+  status: DocumentStatus;
+  failureCode: string | null;
+  message: string | null;
+}

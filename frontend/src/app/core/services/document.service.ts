@@ -6,7 +6,8 @@ import { environment } from '../../../environments/environment';
 import {
   DocumentType,
   DocumentUploadResponse,
-  DocumentDetail // <-- NEW: Import the detail model
+  DocumentDetail,
+  DocumentStatusResponse
 } from '../../shared/models/document.models';
 
 @Injectable({
@@ -124,4 +125,11 @@ export class DocumentService {
       `${environment.apiUrl}/documents/${documentId}`
     );
   }
+
+  // --- Polling Endpoint ---
+    getDocumentStatus(documentId: number): Observable<DocumentStatusResponse> {
+      return this.http.get<DocumentStatusResponse>(
+        `${environment.apiUrl}/documents/${documentId}/status`
+      );
+    }
 }

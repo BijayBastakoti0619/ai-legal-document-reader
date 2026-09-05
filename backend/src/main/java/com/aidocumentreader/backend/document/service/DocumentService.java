@@ -1,6 +1,7 @@
 package com.aidocumentreader.backend.document.service;
 
 import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
+import com.aidocumentreader.backend.document.dto.DocumentStatusResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.dto.DocumentContent;
 import com.aidocumentreader.backend.document.entity.Document;
@@ -49,12 +50,7 @@ public class DocumentService {
         this.userService = userService;
     }
 
-    public Document uploadDocument(
-            MultipartFile file,
-            String authenticatedEmail,
-            DocumentType documentType
-    ) {
-
+    public Document uploadDocument(MultipartFile file, String authenticatedEmail, DocumentType documentType) {
         pdfValidationService.validate(file);
         User user = userService.getCurrentUser(authenticatedEmail);
         byte[] fileBytes = readFileBytes(file);
@@ -64,17 +60,9 @@ public class DocumentService {
         String contentType = file.getContentType();
 
         try {
-            b2StorageService.upload(
-                    objectKey,
-                    fileBytes,
-                    contentType
-            );
-
+            b2StorageService.upload(objectKey, fileBytes, contentType);
         } catch (RuntimeException exception) {
-            throw new DocumentUploadException(
-                    "The document could not be uploaded.",
-                    exception
-            );
+            throw new DocumentUploadException("The document could not be uploaded.", exception);
         }
 
         Document document = new Document();
@@ -89,63 +77,75 @@ public class DocumentService {
 
         try {
             return documentRepository.saveAndFlush(document);
-
         } catch (RuntimeException exception) {
             cleanupUploadedObject(objectKey);
-            throw new DocumentUploadException(
-                    "The document could not be uploaded.",
-                    exception
-            );
+            throw new DocumentUploadException("The document could not be uploaded.", exception);
         }
     }
 
     public Page<DocumentSummaryResponse> getDocuments(Pageable pageable, String authenticatedEmail) {
         User user = userService.getCurrentUser(authenticatedEmail);
-
-        // FIX: Using the derived query method
         Page<Document> documents = documentRepository.findAllByUserIdAndStatusNotOrderByCreatedAtDesc(
-                user.getId(),
-                DocumentStatus.DELETED,
-                pageable
+                user.getId(), DocumentStatus.DELETED, pageable
         );
 
         return documents.map(doc -> new DocumentSummaryResponse(
-                doc.getId(),
-                doc.getOriginalFilename(),
-                doc.getFileSize(),
-                doc.getDocumentType().name(),
-                doc.getStatus().name(),
-                doc.getCreatedAt()
+                doc.getId(), doc.getOriginalFilename(), doc.getFileSize(),
+                doc.getDocumentType().name(), doc.getStatus().name(), doc.getCreatedAt()
         ));
     }
 
     public DocumentDetailResponse getDocument(Long id, String authenticatedEmail) {
         User user = userService.getCurrentUser(authenticatedEmail);
-
-        // FIX: Ensure we call the updated repository method and pass the DELETED status
         Document doc = documentRepository.findByIdAndUserIdAndStatusNot(id, user.getId(), DocumentStatus.DELETED)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         return new DocumentDetailResponse(
-                doc.getId(),
-                doc.getOriginalFilename(),
-                doc.getContentType(),
-                doc.getFileSize(),
-                doc.getDocumentType().name(), // FIX: Moved documentType to its correct position
-                doc.getStatus().name(),       // FIX: Moved status to its correct position
-                doc.getCreatedAt(),
-                doc.getUpdatedAt()
+                doc.getId(), doc.getOriginalFilename(), doc.getContentType(), doc.getFileSize(),
+                doc.getDocumentType().name(), doc.getStatus().name(), doc.getCreatedAt(), doc.getUpdatedAt()
         );
+    }
+
+    // FIX: New controlled state transition method
+    public void updateProcessingStatus(Long documentId, String authenticatedEmail, DocumentStatus newStatus, String failureCode, String failureMessage) {
+        User user = userService.getCurrentUser(authenticatedEmail);
+
+        Document doc = documentRepository.findByIdAndUserIdAndStatusNot(documentId, user.getId(), DocumentStatus.DELETED)
+                .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
+
+        if (!isValidTransition(doc.getStatus(), newStatus)) {
+            throw new IllegalStateException("Invalid status transition from " + doc.getStatus() + " to " + newStatus);
+        }
+
+        doc.setStatus(newStatus);
+
+        // Only set failure messages if the status is actually FAILED
+        if (newStatus == DocumentStatus.FAILED) {
+            doc.setFailureCode(failureCode);
+            doc.setFailureMessage(failureMessage);
+        }
+
+        documentRepository.saveAndFlush(doc);
+    }
+
+    // FIX: Strict State Machine enforcing permitted lifecycles
+    private boolean isValidTransition(DocumentStatus currentStatus, DocumentStatus newStatus) {
+        if (currentStatus == newStatus) return false; // Block duplicate transitions
+
+        return switch (currentStatus) {
+            case UPLOADED -> newStatus == DocumentStatus.EXTRACTING || newStatus == DocumentStatus.DELETED;
+            case EXTRACTING -> newStatus == DocumentStatus.ANALYZING || newStatus == DocumentStatus.FAILED;
+            case ANALYZING -> newStatus == DocumentStatus.COMPLETED || newStatus == DocumentStatus.FAILED;
+            case COMPLETED, FAILED -> newStatus == DocumentStatus.DELETED;
+            case DELETED -> false;
+        };
     }
 
     private byte[] readFileBytes(MultipartFile file) {
         try {
             return file.getBytes();
         } catch (IOException exception) {
-            throw new DocumentUploadException(
-                    "The document could not be read.",
-                    exception
-            );
+            throw new DocumentUploadException("The document could not be read.", exception);
         }
     }
 
@@ -163,109 +163,62 @@ public class DocumentService {
         try {
             b2StorageService.delete(objectKey);
         } catch (RuntimeException cleanupException) {
-            log.error(
-                    "Failed to remove orphaned B2 object: {}",
-                    objectKey,
-                    cleanupException
-            );
+            log.error("Failed to remove orphaned B2 object: {}", objectKey, cleanupException);
         }
     }
 
-    public DocumentContent getDocumentContent(
-            Long documentId,
-            String authenticatedEmail
-    ) {
+    public DocumentContent getDocumentContent(Long documentId, String authenticatedEmail) {
+        User authenticatedUser = userService.getCurrentUser(authenticatedEmail);
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
-        User authenticatedUser =
-                userService.getCurrentUser(
-                        authenticatedEmail
-                );
-
-        Document document =
-                documentRepository.findById(documentId)
-                        .orElseThrow(() ->
-                                new DocumentNotFoundException(
-                                        "Document not found."
-                                )
-                        );
-
-        if (!document.getUser()
-                .getId()
-                .equals(authenticatedUser.getId())) {
-            throw new DocumentNotFoundException(
-                    "Document not found."
-            );
+        if (!document.getUser().getId().equals(authenticatedUser.getId())) {
+            throw new DocumentNotFoundException("Document not found.");
         }
-
-        byte[] fileBytes;
 
         try {
-
-            fileBytes =
-                    b2StorageService.download(
-                            document.getStorageKey()
-                    );
-
+            byte[] fileBytes = b2StorageService.download(document.getStorageKey());
+            return new DocumentContent(document.getOriginalFilename(), document.getContentType(), fileBytes);
         } catch (RuntimeException exception) {
-
-            throw new DocumentUploadException(
-                    "The document could not be retrieved.",
-                    exception
-            );
+            throw new DocumentUploadException("The document could not be retrieved.", exception);
         }
+    }
 
-        return new DocumentContent(
-                document.getOriginalFilename(),
-                document.getContentType(),
-                fileBytes
+    // Phase 2: Status Polling Endpoint Logic
+    public DocumentStatusResponse getDocumentStatus(Long documentId, String authenticatedEmail) {
+        User user = userService.getCurrentUser(authenticatedEmail);
+
+        Document doc = documentRepository.findByIdAndUserIdAndStatusNot(documentId, user.getId(), DocumentStatus.DELETED)
+                .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
+
+        return new DocumentStatusResponse(
+                doc.getId(),
+                doc.getStatus().name(),
+                doc.getFailureCode(),
+                doc.getFailureMessage()
         );
     }
 
-    public void deleteDocument(
-            Long documentId,
-            String authenticatedEmail
-    ) {
+    public void deleteDocument(Long documentId, String authenticatedEmail) {
+        User authenticatedUser = userService.getCurrentUser(authenticatedEmail);
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
-        User authenticatedUser =
-                userService.getCurrentUser(
-                        authenticatedEmail
-                );
-
-        Document document =
-                documentRepository.findById(documentId)
-                        .orElseThrow(() ->
-                                new DocumentNotFoundException(
-                                        "Document not found."
-                                )
-                        );
-
-        if (!document.getUser()
-                .getId()
-                .equals(authenticatedUser.getId())) {
-
-            throw new DocumentNotFoundException(
-                    "Document not found."
-            );
+        if (!document.getUser().getId().equals(authenticatedUser.getId())) {
+            throw new DocumentNotFoundException("Document not found.");
         }
 
-        if (document.getStatus()
-                == DocumentStatus.DELETED) {
-
-            throw new DocumentNotFoundException(
-                    "Document not found."
-            );
+        if (document.getStatus() == DocumentStatus.DELETED) {
+            throw new DocumentNotFoundException("Document not found.");
         }
 
-        b2StorageService.delete(
-                document.getStorageKey()
-        );
+        // FIX: Block deletion if the document is actively processing to prevent orphaned processes
+        if (!isValidTransition(document.getStatus(), DocumentStatus.DELETED)) {
+            throw new IllegalStateException("Cannot delete a document while it is actively processing.");
+        }
 
-        document.setStatus(
-                DocumentStatus.DELETED
-        );
-
-        documentRepository.saveAndFlush(
-                document
-        );
+        b2StorageService.delete(document.getStorageKey());
+        document.setStatus(DocumentStatus.DELETED);
+        documentRepository.saveAndFlush(document);
     }
 }

@@ -10,7 +10,8 @@ import {
   DocumentSummary,
   DocumentDetail,
   PaginatedResponse,
-  DocumentType // <-- 1. NEW: Imported the enum
+  DocumentType,
+  DocumentStatusResponse
 } from '../../shared/models/document.models';
 
 describe('DocumentService', () => {
@@ -127,4 +128,27 @@ describe('DocumentService', () => {
     expect(req.request.responseType).toBe('blob');
     req.flush(mockBlob);
   });
+
+  it('should fetch document status by id', () => {
+      // Arrange
+      const mockStatus: DocumentStatusResponse = {
+        documentId: 15,
+        status: 'EXTRACTING',
+        failureCode: null,
+        message: null
+      };
+
+      // Act
+      service.getDocumentStatus(15).subscribe(statusResponse => {
+        // Assert
+        expect(statusResponse.documentId).toBe(15);
+        expect(statusResponse.status).toBe('EXTRACTING');
+        expect(statusResponse.failureCode).toBeNull();
+      });
+
+      // Assert HTTP call
+      const req = httpMock.expectOne(`${environment.apiUrl}/documents/15/status`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockStatus);
+    });
 });

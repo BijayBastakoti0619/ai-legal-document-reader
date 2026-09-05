@@ -116,3 +116,56 @@
 .back-button:hover {
   opacity: 0.9;
 }
+/* --- Processing Lifecycle Banner Styles --- */
+.processing-banner {
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+.processing-banner p {
+  margin: 0;
+}
+
+.failure-reason {
+  font-weight: 400;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Color States based on the lowercase status class */
+.processing-banner.uploaded,
+.processing-banner.extracting,
+.processing-banner.analyzing {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* A pulse animation for active processing */
+.processing-banner.extracting,
+.processing-banner.analyzing {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.processing-banner.completed {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.processing-banner.failed {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

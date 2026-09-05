@@ -1,9 +1,6 @@
 package com.aidocumentreader.backend.document.controller;
 
-import com.aidocumentreader.backend.document.dto.DocumentContent;
-import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
-import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
-import com.aidocumentreader.backend.document.dto.DocumentUploadResponse;
+import com.aidocumentreader.backend.document.dto.*;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentType;
 import com.aidocumentreader.backend.document.service.DocumentService;
@@ -115,6 +112,17 @@ public class DocumentController {
             Principal principal
     ) {
         return documentService.getDocument(
+                documentId,
+                principal.getName()
+        );
+    }
+
+    @GetMapping("/{documentId}/status")
+    public DocumentStatusResponse getDocumentStatus(
+            @PathVariable Long documentId,
+            Principal principal
+    ) {
+        return documentService.getDocumentStatus(
                 documentId,
                 principal.getName()
         );

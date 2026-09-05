@@ -62,6 +62,15 @@ public class Document {
     @Column(nullable = false, length = 30)
     private DocumentStatus status;
 
+    // FIX: Added failure fields mapped to the database
+    @Setter
+    @Column(name = "failure_code", length = 50)
+    private String failureCode;
+
+    @Setter
+    @Column(name = "failure_message", length = 1000)
+    private String failureMessage;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -85,47 +94,19 @@ public class Document {
         updatedAt = Instant.now();
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public User getUser() { return user; }
+    public String getOriginalFilename() { return originalFilename; }
+    public String getStorageKey() { return storageKey; }
+    public String getContentType() { return contentType; }
+    public long getFileSize() { return fileSize; }
+    public String getSha256() { return sha256; }
+    public DocumentStatus getStatus() { return status; }
+    public DocumentType getDocumentType() { return documentType; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 
-    public User getUser() {
-        return user;
-    }
-
-    public String getOriginalFilename() {
-        return originalFilename;
-    }
-
-    public String getStorageKey() {
-        return storageKey;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public long getFileSize() {
-        return fileSize;
-    }
-
-    public String getSha256() {
-        return sha256;
-    }
-
-    public DocumentStatus getStatus() {
-        return status;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public DocumentType getDocumentType() {
-        return documentType;
-    }
+    // FIX: Added getters for new failure fields
+    public String getFailureCode() { return failureCode; }
+    public String getFailureMessage() { return failureMessage; }
 }

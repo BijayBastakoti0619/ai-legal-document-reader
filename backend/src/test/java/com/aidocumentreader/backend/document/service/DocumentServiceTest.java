@@ -4,7 +4,7 @@ import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
-import com.aidocumentreader.backend.document.entity.DocumentType; // FIX: Added import
+import com.aidocumentreader.backend.document.entity.DocumentType;
 import com.aidocumentreader.backend.document.repository.DocumentRepository;
 import com.aidocumentreader.backend.document.validation.PdfValidationService;
 import com.aidocumentreader.backend.storage.service.B2StorageService;
@@ -52,7 +52,6 @@ class DocumentServiceTest {
 
     @Test
     void shouldReturnPaginatedDocumentSummaries() {
-        // Arrange: Mock the user lookup
         String email = "test@example.com";
         User user = new User();
         user.setId(1L);
@@ -60,7 +59,6 @@ class DocumentServiceTest {
 
         when(userService.getCurrentUser(email)).thenReturn(user);
 
-        // Arrange: Mock the paginated database response
         Pageable pageable = PageRequest.of(0, 10);
         Document doc = new Document();
         doc.setId(100L);
@@ -68,18 +66,15 @@ class DocumentServiceTest {
         doc.setContentType("application/pdf");
         doc.setFileSize(5000L);
         doc.setStatus(DocumentStatus.UPLOADED);
-        doc.setDocumentType(DocumentType.valueOf("LEASE")); // FIX: Add document type to prevent NPE during mapping
+        doc.setDocumentType(DocumentType.valueOf("LEASE"));
 
         Page<Document> mockPage = new PageImpl<>(List.of(doc), pageable, 1);
 
-        // FIX: Stub the derived query method call
         when(documentRepository.findAllByUserIdAndStatusNotOrderByCreatedAtDesc(eq(1L), eq(DocumentStatus.DELETED), eq(pageable)))
                 .thenReturn(mockPage);
 
-        // Act
         Page<DocumentSummaryResponse> result = documentService.getDocuments(pageable, email);
 
-        // Assert
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).originalFilename()).isEqualTo("test.pdf");
         assertThat(result.getContent().get(0).id()).isEqualTo(100L);
@@ -87,7 +82,6 @@ class DocumentServiceTest {
 
     @Test
     void shouldReturnDocumentDetailWhenAuthorized() {
-        // Arrange
         String email = "owner@example.com";
         User user = new User();
         user.setId(5L);
@@ -102,15 +96,12 @@ class DocumentServiceTest {
         doc.setContentType("application/pdf");
         doc.setFileSize(1024L);
         doc.setStatus(DocumentStatus.UPLOADED);
-        doc.setDocumentType(DocumentType.valueOf("LEASE")); // FIX: Add document type to prevent NPE during mapping
+        doc.setDocumentType(DocumentType.valueOf("LEASE"));
 
-        // FIX: Updated mock call to include the DELETED status parameter
         when(documentRepository.findByIdAndUserIdAndStatusNot(documentId, 5L, DocumentStatus.DELETED)).thenReturn(Optional.of(doc));
 
-        // Act
         DocumentDetailResponse result = documentService.getDocument(documentId, email);
 
-        // Assert
         assertThat(result.id()).isEqualTo(documentId);
         assertThat(result.originalFilename()).isEqualTo("lease.pdf");
         assertThat(result.contentType()).isEqualTo("application/pdf");
@@ -118,7 +109,6 @@ class DocumentServiceTest {
 
     @Test
     void shouldThrowExceptionWhenDocumentNotFoundOrUnauthorized() {
-        // Arrange: Simulating User B trying to access User A's document
         String email = "hacker@example.com";
         User user = new User();
         user.setId(99L);
@@ -127,12 +117,50 @@ class DocumentServiceTest {
         when(userService.getCurrentUser(email)).thenReturn(user);
 
         Long documentId = 15L;
-        // FIX: Updated mock call to include the DELETED status parameter
         when(documentRepository.findByIdAndUserIdAndStatusNot(documentId, 99L, DocumentStatus.DELETED)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThatThrownBy(() -> documentService.getDocument(documentId, email))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Document not found");
+    }
+
+    // FIX: New Test - Happy Path Status Transition
+    @Test
+    void shouldSuccessfullyTransitionStatus() {
+        String email = "owner@example.com";
+        User user = new User();
+        user.setId(1L);
+        user.setEmail(email);
+
+        Document doc = new Document();
+        doc.setId(10L);
+        doc.setStatus(DocumentStatus.UPLOADED);
+
+        when(userService.getCurrentUser(email)).thenReturn(user);
+        when(documentRepository.findByIdAndUserIdAndStatusNot(10L, 1L, DocumentStatus.DELETED)).thenReturn(Optional.of(doc));
+
+        documentService.updateProcessingStatus(10L, email, DocumentStatus.EXTRACTING, null, null);
+
+        assertThat(doc.getStatus()).isEqualTo(DocumentStatus.EXTRACTING);
+    }
+
+    // FIX: New Test - Block Invalid Status Transition
+    @Test
+    void shouldRejectInvalidStatusTransition() {
+        String email = "owner@example.com";
+        User user = new User();
+        user.setId(1L);
+        user.setEmail(email);
+
+        Document doc = new Document();
+        doc.setId(10L);
+        doc.setStatus(DocumentStatus.COMPLETED);
+
+        when(userService.getCurrentUser(email)).thenReturn(user);
+        when(documentRepository.findByIdAndUserIdAndStatusNot(10L, 1L, DocumentStatus.DELETED)).thenReturn(Optional.of(doc));
+
+        assertThatThrownBy(() -> documentService.updateProcessingStatus(10L, email, DocumentStatus.EXTRACTING, null, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid status transition");
     }
 }

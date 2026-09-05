@@ -15,7 +15,8 @@ describe('DocumentDetailComponent', () => {
   // Mock the DocumentService
   const mockDocumentService = {
     getDocument: vi.fn(),
-    getDocumentContent: vi.fn()
+    getDocumentContent: vi.fn(),
+    getDocumentStatus: vi.fn() // FIX: Added the new mock method so the tests don't crash
   };
 
   beforeEach(async () => {
@@ -26,7 +27,6 @@ describe('DocumentDetailComponent', () => {
       providers: [
         provideRouter([]),
         { provide: DocumentService, useValue: mockDocumentService },
-        // --- FIX: Correctly mock the synchronous 'snapshot' structure ---
         {
           provide: ActivatedRoute,
           useValue: {
@@ -45,32 +45,21 @@ describe('DocumentDetailComponent', () => {
   }
 
   it('should show the loading state initially', () => {
-    // Arrange: Return an unresolved Subject to simulate a pending HTTP request
     mockDocumentService.getDocument.mockReturnValue(new Subject());
-
-    // Act
     createComponent();
-    fixture.detectChanges(); // Triggers ngOnInit
-
-    // Assert
+    fixture.detectChanges();
     expect(component.isLoading()).toBe(true);
   });
 
   it('should show the error state if the document is not found or unauthorized', () => {
-    // Arrange: Simulate a 404 DocumentNotFoundException from the backend
     mockDocumentService.getDocument.mockReturnValue(throwError(() => new Error('Not Found')));
-
-    // Act
     createComponent();
     fixture.detectChanges();
-
-    // Assert
     expect(component.isLoading()).toBe(false);
     expect(component.hasError()).toBe(true);
   });
 
   it('should display document details on a successful fetch', () => {
-    // Arrange: Simulate a successful backend response
     const mockDetail: DocumentDetail = {
       id: 15,
       originalFilename: 'confidential-nda.pdf',

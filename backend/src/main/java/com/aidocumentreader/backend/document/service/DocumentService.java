@@ -1,9 +1,10 @@
 package com.aidocumentreader.backend.document.service;
 
+import com.aidocumentreader.backend.document.dto.DocumentContent;
 import com.aidocumentreader.backend.document.dto.DocumentDetailResponse;
 import com.aidocumentreader.backend.document.dto.DocumentStatusResponse;
 import com.aidocumentreader.backend.document.dto.DocumentSummaryResponse;
-import com.aidocumentreader.backend.document.dto.DocumentContent;
+import com.aidocumentreader.backend.document.dto.pdf.PdfExtractionResult;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentStatus;
 import com.aidocumentreader.backend.document.entity.DocumentType;
@@ -11,6 +12,8 @@ import com.aidocumentreader.backend.document.repository.DocumentRepository;
 import com.aidocumentreader.backend.document.validation.PdfValidationService;
 import com.aidocumentreader.backend.exception.DocumentNotFoundException;
 import com.aidocumentreader.backend.exception.DocumentUploadException;
+import com.aidocumentreader.backend.exception.PdfExtractionErrorCode;
+import com.aidocumentreader.backend.exception.PdfExtractionException;
 import com.aidocumentreader.backend.storage.service.B2StorageService;
 import com.aidocumentreader.backend.user.entity.User;
 import com.aidocumentreader.backend.user.service.UserService;
@@ -35,19 +38,22 @@ public class DocumentService {
     private final Sha256Service sha256Service;
     private final B2StorageService b2StorageService;
     private final UserService userService;
+    private final PdfTextExtractionService pdfTextExtractionService;
 
     public DocumentService(
             DocumentRepository documentRepository,
             PdfValidationService pdfValidationService,
             Sha256Service sha256Service,
             B2StorageService b2StorageService,
-            UserService userService
+            UserService userService,
+            PdfTextExtractionService pdfTextExtractionService
     ) {
         this.documentRepository = documentRepository;
         this.pdfValidationService = pdfValidationService;
         this.sha256Service = sha256Service;
         this.b2StorageService = b2StorageService;
         this.userService = userService;
+        this.pdfTextExtractionService = pdfTextExtractionService;
     }
 
     public Document uploadDocument(MultipartFile file, String authenticatedEmail, DocumentType documentType) {
@@ -135,6 +141,7 @@ public class DocumentService {
         return switch (currentStatus) {
             case UPLOADED -> newStatus == DocumentStatus.EXTRACTING || newStatus == DocumentStatus.DELETED;
             case EXTRACTING -> newStatus == DocumentStatus.ANALYZING || newStatus == DocumentStatus.FAILED;
+            case EXTRACTED -> newStatus == DocumentStatus.ANALYZING || newStatus == DocumentStatus.DELETED;
             case ANALYZING -> newStatus == DocumentStatus.COMPLETED || newStatus == DocumentStatus.FAILED;
             case COMPLETED, FAILED -> newStatus == DocumentStatus.DELETED;
             case DELETED -> false;
@@ -221,4 +228,119 @@ public class DocumentService {
         document.setStatus(DocumentStatus.DELETED);
         documentRepository.saveAndFlush(document);
     }
+    public PdfExtractionResult extractDocument(
+            Long documentId,
+            String authenticatedEmail
+    ) {
+
+        User user = userService.getCurrentUser(authenticatedEmail);
+
+        Document document = documentRepository
+                .findByIdAndUserIdAndStatusNot(
+                        documentId,
+                        user.getId(),
+                        DocumentStatus.DELETED
+                )
+                .orElseThrow(
+                        () -> new DocumentNotFoundException(
+                                "Document not found"
+                        )
+                );
+
+        if (!isValidTransition(
+                document.getStatus(),
+                DocumentStatus.EXTRACTING
+        )) {
+            throw new IllegalStateException(
+                    "Document cannot be extracted from status "
+                            + document.getStatus()
+            );
+        }
+
+        // UPLOADED -> EXTRACTING
+        document.setStatus(DocumentStatus.EXTRACTING);
+        document.setFailureCode(null);
+        document.setFailureMessage(null);
+
+        documentRepository.saveAndFlush(document);
+
+        try {
+
+            byte[] pdfBytes =
+                    b2StorageService.download(
+                            document.getStorageKey()
+                    );
+
+            PdfExtractionResult result =
+                    pdfTextExtractionService.extract(pdfBytes);
+
+            // Extraction succeeded
+            document.setStatus(DocumentStatus.EXTRACTED);
+            document.setFailureCode(null);
+            document.setFailureMessage(null);
+
+            documentRepository.saveAndFlush(document);
+
+            log.info(
+                    "PDF extraction completed for documentId={}, pages={}",
+                    document.getId(),
+                    result.pages().size()
+            );
+
+            return result;
+
+        } catch (PdfExtractionException exception) {
+
+            String failureCode =
+                    exception.getErrorCode().name();
+
+            String failureMessage =
+                    exception.getErrorCode().getUserMessage();
+
+            document.setStatus(DocumentStatus.FAILED);
+            document.setFailureCode(failureCode);
+            document.setFailureMessage(failureMessage);
+
+            documentRepository.saveAndFlush(document);
+
+            log.warn(
+                    "PDF extraction rejected for documentId={}, code={}",
+                    document.getId(),
+                    failureCode
+            );
+
+            throw exception;
+
+        } catch (RuntimeException exception) {
+
+            document.setStatus(DocumentStatus.FAILED);
+
+            document.setFailureCode(
+                    PdfExtractionErrorCode
+                            .PDF_EXTRACTION_FAILED
+                            .name()
+            );
+
+            document.setFailureMessage(
+                    PdfExtractionErrorCode
+                            .PDF_EXTRACTION_FAILED
+                            .getUserMessage()
+            );
+
+            documentRepository.saveAndFlush(document);
+
+            log.error(
+                    "Unexpected PDF extraction failure for documentId={}",
+                    document.getId(),
+                    exception
+            );
+
+            throw new PdfExtractionException(
+                    PdfExtractionErrorCode.PDF_EXTRACTION_FAILED
+            );
+        }
+    }
+
+
+
 }

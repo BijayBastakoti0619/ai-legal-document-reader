@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
+
 import { environment } from '../../../environments/environment';
 import {
   DocumentType,
@@ -9,6 +10,7 @@ import {
   DocumentDetail,
   DocumentStatusResponse
 } from '../../shared/models/document.models';
+import {PdfExtractionResult} from '../../shared/models/pdf-extraction.model';
 
 @Injectable({
   providedIn: 'root'
@@ -132,4 +134,12 @@ export class DocumentService {
         `${environment.apiUrl}/documents/${documentId}/status`
       );
     }
+
+  extractDocument(documentId: number): Observable<PdfExtractionResult> {
+    return this.http.post<PdfExtractionResult>(
+      `${environment.apiUrl}/documents/${documentId}/extract`,
+      null
+    );
+  }
+
 }

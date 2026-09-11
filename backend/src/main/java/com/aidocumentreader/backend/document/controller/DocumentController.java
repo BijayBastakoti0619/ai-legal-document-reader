@@ -1,6 +1,7 @@
 package com.aidocumentreader.backend.document.controller;
 
 import com.aidocumentreader.backend.document.dto.*;
+import com.aidocumentreader.backend.document.dto.pdf.PdfExtractionResult;
 import com.aidocumentreader.backend.document.entity.Document;
 import com.aidocumentreader.backend.document.entity.DocumentType;
 import com.aidocumentreader.backend.document.service.DocumentService;
@@ -141,6 +142,17 @@ public class DocumentController {
         documentService.deleteDocument(
                 documentId,
                 authenticatedEmail
+        );
+    }
+    @PostMapping("/{documentId}/extract")
+    public PdfExtractionResult extractDocument(
+            @PathVariable Long documentId,
+            Principal principal
+    ) {
+
+        return documentService.extractDocument(
+                documentId,
+                principal.getName()
         );
     }
 }

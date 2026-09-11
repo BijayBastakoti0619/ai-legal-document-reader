@@ -239,4 +239,33 @@ public class GlobalExceptionHandler {
                 ? existingId
                 : UUID.randomUUID().toString();
     }
+
+    @ExceptionHandler(PdfExtractionException.class)
+    public ResponseEntity<ApiErrorResponse> handlePdfExtraction(
+            PdfExtractionException exception,
+            HttpServletRequest request
+    ) {
+
+        PdfExtractionErrorCode errorCode =
+                exception.getErrorCode();
+
+        HttpStatus status =
+                errorCode == PdfExtractionErrorCode.PDF_EXTRACTION_FAILED
+                        ? HttpStatus.INTERNAL_SERVER_ERROR
+                        : HttpStatus.UNPROCESSABLE_ENTITY;
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                errorCode.name(),
+                errorCode.getUserMessage(),
+                request.getRequestURI(),
+                correlationId(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(response);
+    }
 }
